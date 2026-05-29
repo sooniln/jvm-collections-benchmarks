@@ -23,12 +23,15 @@ import java.util.concurrent.TimeUnit
 @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-open class Map64Benchmark {
+open class LongMapBenchmark {
 
     @State(Scope.Benchmark)
     open class BaseState {
         @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Koloboke")
         var type: String = ""
+
+        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
+        var size: Int = 3000
 
         lateinit var map: BenchmarkableLongMap<*>
 
@@ -40,9 +43,6 @@ open class Map64Benchmark {
 
     @State(Scope.Benchmark)
     open class RandomState : BaseState() {
-
-        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
-        open var size: Int = 3000
 
         lateinit var keys: LongArray
 
@@ -62,9 +62,6 @@ open class Map64Benchmark {
 
     @State(Scope.Benchmark)
     open class FullState : BaseState() {
-
-        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
-        open var size: Int = 3000
 
         @Param("random", "sequential", "even", "partition", "highBits")
         var order: String = "random"

@@ -16,33 +16,33 @@ import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * A JVM specific benchmark which measures the performance of various map libraries.
+ * A JVM specific benchmark which measures the performance of various set libraries.
  */
 @Fork(1)
 @Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-open class Map32Benchmark {
+open class IntSetBenchmark {
 
     @State(Scope.Benchmark)
     open class BaseState {
         @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Koloboke")
         var type: String = ""
 
-        lateinit var map: BenchmarkableIntMap<*>
+        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
+        var size: Int = 3000
+
+        lateinit var set: BenchmarkableIntSet<*>
 
         @Setup(Level.Trial)
         open fun setup() {
-            map = BenchmarkableIntMap.from(type)
+            set = BenchmarkableIntSet.from(type)
         }
     }
 
     @State(Scope.Benchmark)
     open class RandomState : BaseState() {
-
-        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
-        open var size: Int = 3000
 
         lateinit var keys: IntArray
 
@@ -53,18 +53,14 @@ open class Map32Benchmark {
             keys = IntArray(size)
             KeyGenerators.generateRandomKeys(keys)
 
-            var value = 0
             for (key in keys) {
-                map.put(key, value++)
+                set.add(key)
             }
         }
     }
 
     @State(Scope.Benchmark)
     open class FullState : BaseState() {
-
-        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
-        open var size: Int = 3000
 
         @Param("random", "sequential", "even", "partition", "highBits")
         var order: String = "random"
@@ -81,7 +77,9 @@ open class Map32Benchmark {
             outKeys = IntArray(size)
             KeyGenerators.generateKeys(order, inKeys, outKeys)
 
-            inKeys.forEachIndexed { i, key -> map.put(key, i) }
+            for (key in inKeys) {
+                set.add(key)
+            }
         }
 
         inline fun <T> nextInKey(crossinline action: FullState.(Int) -> T): T {
@@ -121,49 +119,49 @@ open class Map32Benchmark {
         @Setup(Level.Trial)
         override fun setup() {
             super.setup()
-            map.clear()
+            set.clear()
         }
 
         inline fun <T> nextMissInKey(crossinline action: FullState.(Int) -> T): T {
             val t = action(inKeys[idx])
             if (++idx == inKeys.size) {
                 idx = 0
-                map.clear()
+                set.clear()
             }
             return t
         }
     }
 
     @Benchmark
-    fun naiveCopy(state: RandomState): BenchmarkableIntMap<*> {
-        val copy = state.map.newInstance()
-        state.map.forEach { key, value -> copy.put(key, value) }
+    fun naiveCopy(state: RandomState): BenchmarkableIntSet<*> {
+        val copy = state.set.newInstance()
+        state.set.forEach { key -> copy.add(key) }
         return copy
     }
 
     @Benchmark
-    fun preAllocatedCopy(state: RandomState) = state.map.copyInstance()
+    fun preAllocatedCopy(state: RandomState) = state.set.copyInstance()
 
     @Benchmark
-    fun getHit(state: FullState) = state.nextInKey { key -> map.get(key) }
+    fun getHit(state: FullState) = state.nextInKey { key -> set.contains(key) }
 
     @Benchmark
-    fun getMiss(state: FullState) = state.nextOutKey { key -> map.get(key) }
+    fun getMiss(state: FullState) = state.nextOutKey { key -> set.contains(key) }
 
     @Benchmark
-    fun putHit(state: FullState) = state.nextInKey { key -> map.put(key, key) }
+    fun putHit(state: FullState) = state.nextInKey { key -> set.add(key) }
 
     @Benchmark
-    fun putMiss(state: EmptyState) = state.nextMissInKey { key -> map.put(key, key) }
+    fun putMiss(state: EmptyState) = state.nextMissInKey { key -> set.add(key) }
 
     @Benchmark
     fun removeAndPutMiss(state: FullState) = state.nextInOutKeys { inKey, outKey ->
-        map.remove(inKey)
-        map.put(outKey, 1)
+        set.remove(inKey)
+        set.add(outKey)
         swapInOut()
     }
 
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
-    fun iterate(state: FullState, bh: Blackhole) = state.map.forEach { key, value -> bh.consume(key); bh.consume(value) }
+    fun iterate(state: FullState, bh: Blackhole) = state.set.forEach { key -> bh.consume(key) }
 }

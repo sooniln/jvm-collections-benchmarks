@@ -1,0 +1,167 @@
+package io.github.sooniln.fastcollect
+
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Fork
+import org.openjdk.jmh.annotations.Level
+import org.openjdk.jmh.annotations.Measurement
+import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.Setup
+import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.annotations.Warmup
+import org.openjdk.jmh.infra.Blackhole
+import java.util.concurrent.TimeUnit
+
+/**
+ * A JVM specific benchmark which measures the performance of various set libraries.
+ */
+@Fork(1)
+@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+open class LongSetBenchmark {
+
+    @State(Scope.Benchmark)
+    open class BaseState {
+        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Koloboke")
+        var type: String = ""
+
+        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
+        var size: Int = 3000
+
+        lateinit var set: BenchmarkableLongSet<*>
+
+        @Setup(Level.Trial)
+        open fun setup() {
+            set = BenchmarkableLongSet.from(type)
+        }
+    }
+
+    @State(Scope.Benchmark)
+    open class RandomState : BaseState() {
+
+        lateinit var keys: LongArray
+
+        @Setup(Level.Trial)
+        override fun setup() {
+            super.setup()
+
+            keys = LongArray(size)
+            KeyGenerators.generateRandomKeys(keys)
+
+            for (key in keys) {
+                set.add(key)
+            }
+        }
+    }
+
+    @State(Scope.Benchmark)
+    open class FullState : BaseState() {
+
+        @Param("random", "sequential", "even", "partition", "highBits")
+        var order: String = "random"
+
+        var idx = 0
+        lateinit var inKeys: LongArray
+        lateinit var outKeys: LongArray
+
+        @Setup(Level.Trial)
+        override fun setup() {
+            super.setup()
+
+            inKeys = LongArray(size)
+            outKeys = LongArray(size)
+            KeyGenerators.generateKeys(order, inKeys, outKeys)
+
+            for (key in inKeys) {
+                set.add(key)
+            }
+        }
+
+        inline fun <T> nextInKey(crossinline action: FullState.(Long) -> T): T {
+            val t = action(inKeys[idx])
+            if (++idx == inKeys.size) {
+                idx = 0
+            }
+            return t
+        }
+
+        inline fun <T> nextOutKey(crossinline action: FullState.(Long) -> T): T {
+            val t = action(outKeys[idx])
+            if (++idx == outKeys.size) {
+                idx = 0
+            }
+            return t
+        }
+
+        inline fun <T> nextInOutKeys(action: FullState.(Long, Long) -> T): T {
+            val t = action(inKeys[idx], outKeys[idx])
+            if (++idx == inKeys.size) {
+                idx = 0
+            }
+            return t
+        }
+
+        @Suppress("NOTHING_TO_INLINE")
+        inline fun swapInOut() {
+            val t = inKeys[idx]
+            inKeys[idx] = outKeys[idx]
+            outKeys[idx] = t
+        }
+    }
+
+    @State(Scope.Benchmark)
+    open class EmptyState : FullState() {
+        @Setup(Level.Trial)
+        override fun setup() {
+            super.setup()
+            set.clear()
+        }
+
+        inline fun <T> nextMissInKey(crossinline action: FullState.(Long) -> T): T {
+            val t = action(inKeys[idx])
+            if (++idx == inKeys.size) {
+                idx = 0
+                set.clear()
+            }
+            return t
+        }
+    }
+
+    @Benchmark
+    fun naiveCopy(state: RandomState): BenchmarkableLongSet<*> {
+        val copy = state.set.newInstance()
+        state.set.forEach { key -> copy.add(key) }
+        return copy
+    }
+
+    @Benchmark
+    fun preAllocatedCopy(state: RandomState) = state.set.copyInstance()
+
+    @Benchmark
+    fun getHit(state: FullState) = state.nextInKey { key -> set.contains(key) }
+
+    @Benchmark
+    fun getMiss(state: FullState) = state.nextOutKey { key -> set.contains(key) }
+
+    @Benchmark
+    fun putHit(state: FullState) = state.nextInKey { key -> set.add(key) }
+
+    @Benchmark
+    fun putMiss(state: EmptyState) = state.nextMissInKey { key -> set.add(key) }
+
+    @Benchmark
+    fun removeAndPutMiss(state: FullState) = state.nextInOutKeys { inKey, outKey ->
+        set.remove(inKey)
+        set.add(outKey)
+        swapInOut()
+    }
+
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Benchmark
+    fun iterate(state: FullState, bh: Blackhole) = state.set.forEach { key -> bh.consume(key) }
+}
