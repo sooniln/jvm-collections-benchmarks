@@ -7,9 +7,9 @@ rows, so all sizes for a given library/order are visible in one row.
 The unit is shown in the table heading.
 
 Usage:
-    python jmh/results_to_markdown.py                        # latest CSV in benchmark-results/
-    python jmh/results_to_markdown.py path/to/results.csv    # explicit CSV input
-    python jmh/results_to_markdown.py results.csv --out results.md
+    python scripts/results_to_markdown.py                        # latest CSV in benchmark-results/
+    python scripts/results_to_markdown.py path/to/results.csv    # explicit CSV input
+    python scripts/results_to_markdown.py results.csv --out results.md
 """
 
 import argparse

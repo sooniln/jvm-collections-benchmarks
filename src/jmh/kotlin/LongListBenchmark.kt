@@ -25,7 +25,7 @@ import kotlin.random.Random
 @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-open class IntListBenchmark {
+open class LongListBenchmark {
 
     @State(Scope.Benchmark)
     open class BaseState {
@@ -37,16 +37,16 @@ open class IntListBenchmark {
         @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
         var size: Int = 3000
 
-        lateinit var list: BenchmarkableIntList<*>
+        lateinit var list: BenchmarkableLongList<*>
 
         var idx = 0
-        lateinit var elements: IntArray
+        lateinit var elements: LongArray
 
         @Setup(Level.Trial)
         open fun setup() {
-            list = BenchmarkableIntList.from(type)
+            list = BenchmarkableLongList.from(type)
 
-            elements = IntArray(size) { rnd.nextInt() }
+            elements = LongArray(size) { rnd.nextLong() }
 
             for (e in elements) {
                 list.add(e)
@@ -55,7 +55,7 @@ open class IntListBenchmark {
             elements.shuffle()
         }
 
-        inline fun <T> nextInElement(crossinline action: BaseState.(Int) -> T): T {
+        inline fun <T> nextInElement(crossinline action: BaseState.(Long) -> T): T {
             val t = action(elements[idx])
             if (++idx == elements.size) {
                 idx = 0
@@ -72,7 +72,7 @@ open class IntListBenchmark {
             list.clear()
         }
 
-        inline fun <T> nextClearedInElement(crossinline action: EmptyState.(Int) -> T): T {
+        inline fun <T> nextClearedInElement(crossinline action: EmptyState.(Long) -> T): T {
             val t = action(elements[idx])
             if (++idx == elements.size) {
                 idx = 0
@@ -83,7 +83,7 @@ open class IntListBenchmark {
     }
 
     @Benchmark
-    fun naiveCopy(state: BaseState): BenchmarkableIntList<*> {
+    fun naiveCopy(state: BaseState): BenchmarkableLongList<*> {
         val copy = state.list.newInstance()
         state.list.forEach { key -> copy.add(key) }
         return copy

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Parse the latest JMH benchmark result from jmh/benchmark-results/ and emit a CSV.
+Parse the latest JMH benchmark result from benchmark-results/ and emit a CSV.
 
 Columns: benchmark, library, [order,] size, score, unit
   - benchmark : operation qualified by benchmark class (e.g. Map32.getHit, Map64.putMiss)
@@ -12,9 +12,9 @@ Columns: benchmark, library, [order,] size, score, unit
   - unit      : score unit from the JSON (e.g. ns/op, us/op)
 
 Usage:
-    python jmh/parse_results.py                        # latest JSON → <stem>.csv next to it
-    python jmh/parse_results.py path/to/results.json   # explicit JSON input
-    python jmh/parse_results.py results.json --out /tmp/out.csv
+    python scripts/parse_results.py                        # latest JSON → <stem>.csv next to it
+    python scripts/parse_results.py path/to/results.json   # explicit JSON input
+    python scripts/parse_results.py results.json --out /tmp/out.csv
 """
 
 import argparse
@@ -80,8 +80,8 @@ def write_csv(rows: list[dict], out_path: Path) -> None:
 
 
 def main() -> None:
-    script_dir  = Path(__file__).parent
-    results_dir = script_dir / "benchmark-results"
+    parent_dir  = Path(__file__).parent.parent
+    results_dir = parent_dir / "benchmark-results"
 
     parser = argparse.ArgumentParser(
         description=__doc__,

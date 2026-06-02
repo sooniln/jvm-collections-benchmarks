@@ -1,4 +1,4 @@
-package io.github.sooniln.fastcollect
+package io.github.sooniln.jvmcollectionsbenchmark
 
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -19,11 +19,15 @@ import java.util.concurrent.TimeUnit
  * A JVM specific benchmark which measures the performance of various map libraries.
  */
 @Fork(1)
-@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class IntMapBenchmark {
+
+    companion object {
+        val seed = System.currentTimeMillis()
+    }
 
     @State(Scope.Benchmark)
     open class BaseState {
@@ -51,7 +55,7 @@ open class IntMapBenchmark {
             super.setup()
 
             keys = IntArray(size)
-            KeyGenerators.generateRandomKeys(keys)
+            KeyGenerators.generateRandomKeys(keys, seed = seed)
 
             var value = 0
             for (key in keys) {
@@ -63,7 +67,7 @@ open class IntMapBenchmark {
     @State(Scope.Benchmark)
     open class FullState : BaseState() {
 
-        @Param("random", "sequential", "even", "partition", "highBits")
+        @Param("random", "lowBits", "even", "partition", "highBits")
         var order: String = "random"
 
         var idx = 0
@@ -76,7 +80,7 @@ open class IntMapBenchmark {
 
             inKeys = IntArray(size)
             outKeys = IntArray(size)
-            KeyGenerators.generateKeys(order, inKeys, outKeys)
+            KeyGenerators.generateKeys(order, inKeys, outKeys, seed = seed)
 
             inKeys.forEachIndexed { i, key -> map.put(key, i) }
         }
@@ -162,5 +166,9 @@ open class IntMapBenchmark {
 
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
-    fun iterate(state: FullState, bh: Blackhole) = state.map.forEach { key, value -> bh.consume(key); bh.consume(value) }
+    fun iterate(state: FullState, bh: Blackhole) = state.map.iterate { key, value -> bh.consume(key); bh.consume(value) }
+
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Benchmark
+    fun forEach(state: FullState, bh: Blackhole) = state.map.forEach { key, value -> bh.consume(key); bh.consume(value) }
 }

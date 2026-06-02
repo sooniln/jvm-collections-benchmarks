@@ -1,4 +1,4 @@
-package io.github.sooniln.fastcollect
+package io.github.sooniln.jvmcollectionsbenchmark
 
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -19,11 +19,15 @@ import java.util.concurrent.TimeUnit
  * A JVM specific benchmark which measures the performance of various set libraries.
  */
 @Fork(1)
-@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongSetBenchmark {
+
+    companion object {
+        val seed = System.currentTimeMillis()
+    }
 
     @State(Scope.Benchmark)
     open class BaseState {
@@ -51,7 +55,7 @@ open class LongSetBenchmark {
             super.setup()
 
             keys = LongArray(size)
-            KeyGenerators.generateRandomKeys(keys)
+            KeyGenerators.generateRandomKeys(keys, seed = seed)
 
             for (key in keys) {
                 set.add(key)
@@ -62,7 +66,7 @@ open class LongSetBenchmark {
     @State(Scope.Benchmark)
     open class FullState : BaseState() {
 
-        @Param("random", "sequential", "even", "partition", "highBits")
+        @Param("random", "lowBits", "even", "partition", "highBits")
         var order: String = "random"
 
         var idx = 0
@@ -75,7 +79,7 @@ open class LongSetBenchmark {
 
             inKeys = LongArray(size)
             outKeys = LongArray(size)
-            KeyGenerators.generateKeys(order, inKeys, outKeys)
+            KeyGenerators.generateKeys(order, inKeys, outKeys, seed = seed)
 
             for (key in inKeys) {
                 set.add(key)
@@ -163,5 +167,9 @@ open class LongSetBenchmark {
 
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
-    fun iterate(state: FullState, bh: Blackhole) = state.set.forEach { key -> bh.consume(key) }
+    fun iterate(state: FullState, bh: Blackhole) = state.set.iterate { key -> bh.consume(key) }
+
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
+    @Benchmark
+    fun forEach(state: FullState, bh: Blackhole) = state.set.forEach { key -> bh.consume(key) }
 }

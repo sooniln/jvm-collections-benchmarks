@@ -4,17 +4,15 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.4.0-RC2"
     id("me.champeau.jmh") version "0.7.3"
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     google()
 }
-
-group = "io.github.sooniln"
-version = "0.0.1"
 
 repositories {
     mavenCentral()
@@ -25,12 +23,14 @@ kotlin {
 }
 
 dependencies {
-    jmhImplementation("io.github.sooniln:fastcollect-kotlin:1.0.1")
-    jmhImplementation("it.unimi.dsi:fastutil:8.5.18")
-    jmhImplementation("org.eclipse.collections:eclipse-collections:13.0.0")
-    jmhImplementation("androidx.collection:collection:1.6.0")
-    jmhImplementation("net.sf.trove4j:core:3.1.0")
-    jmhImplementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
+    implementation("org.openjdk.jol:jol-core:0.17")
+
+    implementation("io.github.sooniln:fastcollect-kotlin-jvm:2.0.0")
+    implementation("it.unimi.dsi:fastutil:8.5.18")
+    implementation("org.eclipse.collections:eclipse-collections:13.0.0")
+    implementation("androidx.collection:collection-jvm:1.6.0")
+    implementation("net.sf.trove4j:core:3.1.0")
+    implementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
 }
 
 jmh {
@@ -43,8 +43,82 @@ jmh {
     findProperty("jmhIncludes")?.also { includes.set(listOf(it as String)) }
 }
 
+registerMemoryMeasurementTask("memory") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.memory.MemoryMeasurementKt"
+}
+
+registerMemoryMeasurementTask("memorySplits") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.memory.SplitMemoryMeasurementKt"
+}
+
+registerJMHTask("IntList") {
+    includes.set(listOf("IntListBenchmark\\."))
+}
+
+registerJMHTask("LongList") {
+    includes.set(listOf("LongListBenchmark\\."))
+}
+
+registerJMHTask("IntSet") {
+    includes.set(listOf("IntSetBenchmark\\."))
+}
+
+registerJMHTask("LongSet") {
+    includes.set(listOf("LongSetBenchmark\\."))
+}
+
+registerJMHTask("IntMap") {
+    includes.set(listOf("IntMapBenchmark\\."))
+}
+
+registerJMHTask("LongMap") {
+    includes.set(listOf("LongMapBenchmark\\."))
+}
+
+registerJitAsm("Int2IntHashMapLookup") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapLookupAsmProbe"
+    jvmArgs(
+        "-XX:CompileCommand=quiet",
+        "-XX:CompileCommand=compileonly,io.github.sooniln.fastcollect.ints.Int2IntHashMap::get",
+        "-XX:CompileCommand=print,io.github.sooniln.fastcollect.ints.Int2IntHashMap::get",
+        "-XX:CompileCommand=compileonly,com.koloboke.collect.impl.hash.MutableLHashParallelKVIntIntMapGO::get",
+        "-XX:CompileCommand=print,com.koloboke.collect.impl.hash.MutableLHashParallelKVIntIntMapGO::get",
+    )
+}
+
+registerJitAsm("jitAsmIntHashSetContains") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.jitasm.IntHashSetContainsAsmProbe"
+    jvmArgs(
+        "-XX:CompileCommand=quiet",
+        "-XX:CompileCommand=compileonly,io.github.sooniln.fastcollect.ints.IntHashSet::contains",
+        "-XX:CompileCommand=print,io.github.sooniln.fastcollect.ints.IntHashSet::contains",
+        "-XX:CompileCommand=compileonly,org.eclipse.collections.impl.set.mutable.primitive.IntHashSet::contains",
+        "-XX:CompileCommand=print,org.eclipse.collections.impl.set.mutable.primitive.IntHashSet::contains",
+    )
+}
+
+registerJitAsm("IntHashSetGrow") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.jitasm.IntHashSetGrowAsmProbe"
+    jvmArgs(
+        "-XX:CompileCommand=quiet",
+        "-XX:CompileCommand=compileonly,io.github.sooniln.fastcollect.ints.IntHashSet::rehash",
+        "-XX:CompileCommand=print,io.github.sooniln.fastcollect.ints.IntHashSet::rehash",
+        "-XX:CompileCommand=compileonly,it.unimi.dsi.fastutil.ints.IntOpenHashSet::rehash",
+        "-XX:CompileCommand=print,it.unimi.dsi.fastutil.ints.IntOpenHashSet::rehash",
+    )
+}
+
+private fun registerMemoryMeasurementTask(name: String, configuration: JavaExec.() -> Unit) = tasks.register<JavaExec>(name) {
+    group = "benchmark"
+    description = "Measure memory of collections"
+    classpath = sourceSets.main.get().runtimeClasspath
+    jvmArgs("-Djdk.attach.allowAttachSelf=true")
+
+    configuration()
+}
+
 private fun registerJMHTask(name: String, configuration: JMHTask.()->Unit): TaskProvider<JMHTask> = tasks.register<JMHTask>("jmh$name") {
-    group = "jmh"
+    group = "benchmark"
     description = "Run JMH benchmarks for $name"
 
     includeTests = false
@@ -86,5 +160,30 @@ tasks.withType<JMHTask> {
 
     // save all benchmark data
     finalizedBy(copyTask)
+
+    // forward various parameters to JMH
+    findProperty("jmhSize")?.also { prop -> benchmarkParameters.put("size", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
+    findProperty("jmhType")?.also { prop -> benchmarkParameters.put("type", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
+    findProperty("jmhOrder")?.also { prop -> benchmarkParameters.put("order", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
+}
+
+private fun registerJitAsm(name: String, configuration: JavaExec.() -> Unit): TaskProvider<JavaExec> = tasks.register<JavaExec>("jitAsm$name") {
+    group = "investigate"
+    description = "Run a small harness that heats up and prints the generated machine code (requires hsdis to be present on path)."
+    classpath = sourceSets["main"].runtimeClasspath
+    jvmArgs(
+        "-Xms256m",
+        "-Xmx256m",
+        "-Xbatch",
+        // Force C2 (server compiler) so the assembly reflects final hot-path optimizations.
+        "-XX:-TieredCompilation",
+        "-XX:CICompilerCount=2",
+        "-XX:CompileThreshold=1000",
+        // Assembly
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+PrintAssembly",
+        "-XX:PrintAssemblyOptions=intel",
+    )
+    configuration()
 }
 
