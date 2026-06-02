@@ -1,7 +1,7 @@
 package io.github.sooniln.jvmcollectionsbenchmark
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import io.github.sooniln.fastcollect.ints.IntHashSet
+import io.github.sooniln.fastcollect.longs.LongHashSet
 import kotlin.random.Random
 
 object KeyGenerators{
@@ -33,7 +33,7 @@ object KeyGenerators{
 
         val rnd = Random(seed)
 
-        val inSet = IntOpenHashSet(inKeys.size)
+        val inSet = IntHashSet(inKeys.size)
         while (inSet.size < inKeys.size) {
             val key = rnd.nextInt()
             if (!inSet.contains(key)) {
@@ -56,7 +56,7 @@ object KeyGenerators{
 
         val rnd = Random(seed)
 
-        val inSet = LongOpenHashSet(inKeys.size)
+        val inSet = LongHashSet(inKeys.size)
         while (inSet.size < inKeys.size) {
             val key = rnd.nextLong()
             if (!inSet.contains(key)) {
