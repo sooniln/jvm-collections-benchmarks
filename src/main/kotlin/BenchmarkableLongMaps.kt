@@ -10,6 +10,7 @@ import gnu.trove.map.hash.TLongLongHashMap
 import io.github.sooniln.fastcollect.longs.Long2LongHashMap
 import io.github.sooniln.fastcollect.longs.getOrDefault
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap
+import org.eclipse.collections.impl.map.mutable.primitive.LongLongHashMap
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.iterator
@@ -43,6 +44,7 @@ interface BenchmarkableLongMap<T> {
             "AndroidX" to { AndroidXMap() },
             "Trove" to { TroveMap() },
             "Koloboke" to { KolobokeMap() },
+            "Eclipse" to { EclipseMap() },
         )
 
         fun from(type: String): BenchmarkableLongMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -145,6 +147,23 @@ interface BenchmarkableLongMap<T> {
             override fun put(key: Long, value: Long) { rawMap.put(key, value)}
             override fun remove(key: Long) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableLongMap<HashLongLongMap>) = rawMap.putAll(otherMap.rawMap)
+            override fun clear() = rawMap.clear()
+        }
+
+        private class EclipseMap : BenchmarkableLongMap<LongLongHashMap> {
+
+            override val rawMap: LongLongHashMap = LongLongHashMap()
+
+            override val size: Int get() = rawMap.size()
+
+            override fun newInstance(): BenchmarkableLongMap<LongLongHashMap> = EclipseMap()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Long, Long) -> Unit) = rawMap.forEachKeyValue { key, value -> action(key, value) }
+            override fun iterate(action: (Long, Long) -> Unit) = throw UnsupportedOperationException()
+            override fun get(key: Long): Long = rawMap.get(key)
+            override fun put(key: Long, value: Long) { rawMap.put(key, value) }
+            override fun remove(key: Long) { rawMap.remove(key) }
+            override fun putAll(otherMap: BenchmarkableLongMap<LongLongHashMap>) = rawMap.putAll(otherMap.rawMap)
             override fun clear() = rawMap.clear()
         }
     }

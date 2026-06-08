@@ -150,6 +150,11 @@ private val exclusiveServiceProvider = gradle.sharedServices.registerIfAbsent("e
     maxParallelUsages.set(1)
 }
 
+private val jmhPow2: Provider<String> = providers.gradleProperty("jmhPow2")
+private val jmhLoadFactor: Provider<String> = providers.gradleProperty("jmhLoadFactor")
+private val jmhType: Provider<String> = providers.gradleProperty("jmhType")
+private val jmhOrder: Provider<String> = providers.gradleProperty("jmhOrder")
+
 tasks.withType<JMHTask> {
     // ensure JMH tasks are never cached
     outputs.cacheIf { false }
@@ -162,9 +167,14 @@ tasks.withType<JMHTask> {
     finalizedBy(copyTask)
 
     // forward various parameters to JMH
-    findProperty("jmhSize")?.also { prop -> benchmarkParameters.put("size", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
-    findProperty("jmhType")?.also { prop -> benchmarkParameters.put("type", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
-    findProperty("jmhOrder")?.also { prop -> benchmarkParameters.put("order", objects.listProperty(String::class.java).apply { addAll(prop.toString().split(",")) }) }
+    if (jmhPow2.isPresent) benchmarkParameters.put("pow2", decodeArgs(jmhPow2.get()))
+    if (jmhLoadFactor.isPresent) benchmarkParameters.put("loadFactor", decodeArgs(jmhLoadFactor.get()))
+    if (jmhType.isPresent) benchmarkParameters.put("type", decodeArgs(jmhType.get()))
+    if (jmhOrder.isPresent) benchmarkParameters.put("order", decodeArgs(jmhOrder.get()))
+}
+
+private fun decodeArgs(args: String): ListProperty<String> {
+    return objects.listProperty(String::class.java).apply { addAll(args.split(",")) }
 }
 
 private fun registerJitAsm(name: String, configuration: JavaExec.() -> Unit): TaskProvider<JavaExec> = tasks.register<JavaExec>("jitAsm$name") {

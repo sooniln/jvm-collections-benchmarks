@@ -6,7 +6,7 @@ import io.github.sooniln.fastcollect.ints.Int2IntHashMap
 import java.util.*
 
 object Int2IntHashMapLookupAsmProbe {
-    private val N_KEYS = 1 shl 14
+    private val N_KEYS = 1 shl 20
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -47,7 +47,9 @@ object Int2IntHashMapLookupAsmProbe {
         var insum = 0
         i = 0
         while (i < outElements.size) {
+            insum += m1[inElements[i]]
             insum += m1[outElements[i]]
+            insum += m2.get(inElements[i])
             insum += m2.get(outElements[i])
             i++
         }

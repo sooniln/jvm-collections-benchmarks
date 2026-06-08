@@ -39,6 +39,7 @@ interface BenchmarkableLongSet<T> {
             "AndroidX" to { AndroidXSet() },
             "Trove" to { TroveSet() },
             "Koloboke" to { KolobokeSet() },
+            "Eclipse" to { EclipseSet() },
         )
 
         fun from(type: String): BenchmarkableLongSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -142,6 +143,23 @@ interface BenchmarkableLongSet<T> {
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.removeLong(key)
             override fun addAll(otherSet: BenchmarkableLongSet<HashLongSet>) = rawSet.addAll(otherSet.rawSet)
+            override fun clear() = rawSet.clear()
+        }
+
+        private class EclipseSet : BenchmarkableLongSet<org.eclipse.collections.impl.set.mutable.primitive.LongHashSet> {
+
+            override val rawSet: org.eclipse.collections.impl.set.mutable.primitive.LongHashSet = org.eclipse.collections.impl.set.mutable.primitive.LongHashSet()
+
+            override val size: Int get() = rawSet.size()
+
+            override fun newInstance(): BenchmarkableLongSet<org.eclipse.collections.impl.set.mutable.primitive.LongHashSet> = EclipseSet()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Long) -> Unit) = rawSet.forEach { key -> action(key) }
+            override fun iterate(action: (Long) -> Unit) = throw UnsupportedOperationException()
+            override fun contains(key: Long) = rawSet.contains(key)
+            override fun add(key: Long): Boolean = rawSet.add(key)
+            override fun remove(key: Long) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableLongSet<org.eclipse.collections.impl.set.mutable.primitive.LongHashSet>) = rawSet.addAll(otherSet.rawSet)
             override fun clear() = rawSet.clear()
         }
     }

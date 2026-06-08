@@ -10,6 +10,7 @@ import gnu.trove.map.hash.TIntIntHashMap
 import io.github.sooniln.fastcollect.ints.Int2IntHashMap
 import io.github.sooniln.fastcollect.ints.getOrDefault
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap
 
 interface BenchmarkableIntMap<T> {
     val rawMap: T
@@ -40,6 +41,7 @@ interface BenchmarkableIntMap<T> {
             "AndroidX" to { AndroidXMap() },
             "Trove" to { TroveMap() },
             "Koloboke" to { KolobokeMap() },
+            "Eclipse" to { EclipseMap() },
         )
 
         fun from(type: String): BenchmarkableIntMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -142,6 +144,23 @@ interface BenchmarkableIntMap<T> {
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableIntMap<HashIntIntMap>) = rawMap.putAll(otherMap.rawMap)
+            override fun clear() = rawMap.clear()
+        }
+
+        private class EclipseMap : BenchmarkableIntMap<IntIntHashMap> {
+
+            override val rawMap: IntIntHashMap = IntIntHashMap()
+
+            override val size: Int get() = rawMap.size()
+
+            override fun newInstance(): BenchmarkableIntMap<IntIntHashMap> = EclipseMap()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachKeyValue { key, value -> action(key, value) }
+            override fun iterate(action: (Int, Int) -> Unit) = throw UnsupportedOperationException()
+            override fun get(key: Int): Int = rawMap.get(key)
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
+            override fun remove(key: Int) { rawMap.remove(key) }
+            override fun putAll(otherMap: BenchmarkableIntMap<IntIntHashMap>) = rawMap.putAll(otherMap.rawMap)
             override fun clear() = rawMap.clear()
         }
     }

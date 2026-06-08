@@ -31,16 +31,25 @@ open class IntSetBenchmark {
 
     @State(Scope.Benchmark)
     open class BaseState {
-        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Koloboke")
+        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Koloboke", "Eclipse")
         var type: String = ""
 
-        @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")
-        var size: Int = 3000
+        @Param("12", "14", "16", "18", "20", "22", "24")
+        var pow2: Int = 12
 
+        @Param(".50", ".75")
+        var loadFactor: Float = .75f
+
+        var size: Int = 0
         lateinit var set: BenchmarkableIntSet<*>
 
         @Setup(Level.Trial)
         open fun setup() {
+            if (loadFactor > .5 && type == "Eclipse") {
+                throw UnsupportedOperationException("eclipse does not support load factors over .5")
+            }
+
+            size = ((1 shl pow2) * loadFactor).toInt() - 2
             set = BenchmarkableIntSet.from(type)
         }
     }

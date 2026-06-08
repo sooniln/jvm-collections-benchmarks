@@ -39,6 +39,7 @@ interface BenchmarkableIntSet<T> {
             "AndroidX" to { AndroidXSet() },
             "Trove" to { TroveSet() },
             "Koloboke" to { KolobokeSet() },
+            "Eclipse" to { EclipseSet() },
         )
 
         fun from(type: String): BenchmarkableIntSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -142,6 +143,23 @@ interface BenchmarkableIntSet<T> {
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.removeInt(key)
             override fun addAll(otherSet: BenchmarkableIntSet<HashIntSet>) = rawSet.addAll(otherSet.rawSet)
+            override fun clear() = rawSet.clear()
+        }
+
+        private class EclipseSet : BenchmarkableIntSet<org.eclipse.collections.impl.set.mutable.primitive.IntHashSet> {
+
+            override val rawSet: org.eclipse.collections.impl.set.mutable.primitive.IntHashSet = org.eclipse.collections.impl.set.mutable.primitive.IntHashSet()
+
+            override val size: Int get() = rawSet.size()
+
+            override fun newInstance(): BenchmarkableIntSet<org.eclipse.collections.impl.set.mutable.primitive.IntHashSet> = EclipseSet()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { key -> action(key) }
+            override fun iterate(action: (Int) -> Unit) = throw UnsupportedOperationException()
+            override fun contains(key: Int) = rawSet.contains(key)
+            override fun add(key: Int): Boolean = rawSet.add(key)
+            override fun remove(key: Int) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableIntSet<org.eclipse.collections.impl.set.mutable.primitive.IntHashSet>) = rawSet.addAll(otherSet.rawSet)
             override fun clear() = rawSet.clear()
         }
     }
