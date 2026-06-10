@@ -78,7 +78,7 @@ fun main() {
     for ((type, map) in BenchmarkableLongMap.all()) {
         var prev = 0
         for (size in growingSizes(from = 0, to = 1_000_000)) {
-            for (i in prev until size) map.put(i.toLong(), i.toLong())
+            for (i in prev until size) map.put(i.toLong(), i)
             prev = size
 
             println("${type}LongMap,$size,${parseInstance(map.rawMap).totalSize()}")

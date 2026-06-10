@@ -89,7 +89,7 @@ fun main() {
         for (numCollections in splits) {
             val size = totalElements / numCollections
             map.ensureCapacity(size)
-            for (i in map.size until size) map.put(i.toLong(), i.toLong())
+            for (i in map.size until size) map.put(i.toLong(), i)
             splitRow("${type}LongList", numCollections, map.rawMap)
         }
     }

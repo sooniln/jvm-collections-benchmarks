@@ -66,7 +66,7 @@ open class LongMapBenchmark {
             keys = LongArray(size)
             KeyGenerators.generateRandomKeys(keys, seed = seed)
 
-            var value = 0L
+            var value = 0
             for (key in keys) {
                 map.put(key, value++)
             }
@@ -91,7 +91,7 @@ open class LongMapBenchmark {
             outKeys = LongArray(size)
             KeyGenerators.generateKeys(order, inKeys, outKeys, seed = seed)
 
-            inKeys.forEachIndexed { i, key -> map.put(key, i.toLong()) }
+            inKeys.forEachIndexed { i, key -> map.put(key, i) }
         }
 
         inline fun <T> nextInKey(crossinline action: FullState.(Long) -> T): T {
@@ -161,10 +161,10 @@ open class LongMapBenchmark {
     fun getMiss(state: FullState) = state.nextOutKey { key -> map.get(key) }
 
     @Benchmark
-    fun putHit(state: FullState) = state.nextInKey { key -> map.put(key, key) }
+    fun putHit(state: FullState) = state.nextInKey { key -> map.put(key, key.toInt()) }
 
     @Benchmark
-    fun putMiss(state: EmptyState) = state.nextMissInKey { key -> map.put(key, key) }
+    fun putMiss(state: EmptyState) = state.nextMissInKey { key -> map.put(key, key.toInt()) }
 
     @Benchmark
     fun removeAndPutMiss(state: FullState) = state.nextInOutKeys { inKey, outKey ->
