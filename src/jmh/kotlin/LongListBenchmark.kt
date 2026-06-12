@@ -21,8 +21,8 @@ import kotlin.random.Random
  * A JVM specific benchmark which measures the performance of various list libraries.
  */
 @Fork(1)
-@Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongListBenchmark {
@@ -31,7 +31,7 @@ open class LongListBenchmark {
     open class BaseState {
         protected val rnd = Random(123)
 
-        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Eclipse")
+        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Eclipse", "HPPC", "Agrona", "PrimitiveCollections")
         var type: String = ""
 
         @Param("3000", "12000", "48000", "192000", "768000", "3072000", "12288000")

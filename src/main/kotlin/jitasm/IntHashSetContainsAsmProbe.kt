@@ -41,8 +41,8 @@ object IntHashSetContainsAsmProbe {
         var outsum: Long = 0
         i = 0
         while (i < outElements.size) {
-            if (m.contains(outElements[i])) ++insum
-            if (n.contains(outElements[i])) ++outsum
+            if (m.contains(inElements[i])) ++insum
+            if (m.contains(outElements[i])) ++outsum
             i++
         }
         println(insum + outsum)

@@ -2,7 +2,7 @@
 """
 Parse the latest JMH benchmark result from benchmark-results/ and emit a CSV.
 
-Columns: benchmark, library, [order,] size, score, unit
+Columns: benchmark, library, [loadFactor, order, pow2,] size, score, unit
   - benchmark : operation qualified by benchmark class (e.g. Map32.getHit, Map64.putMiss)
   - library   : the implementation under test, from params.type (e.g. FastCollect, Fastutil, JRE)
   - order     : key-distribution pattern (e.g. sequential, random, highBits);
@@ -52,18 +52,15 @@ def parse(json_path: Path) -> list[dict]:
 
         params = entry.get("params", {})
         rows.append({
-            "library":   params["type"],
-            "benchmark": f"{class_label}.{method}",
-            "order":     params.get("order"),   # None when absent
-            "size":      int(params["size"]),
-            "score":     median_of_raw_data(entry["primaryMetric"]["rawData"]),
-            "unit":      entry["primaryMetric"]["scoreUnit"],
+            "library":    params["type"],
+            "benchmark":  f"{class_label}.{method}",
+            "loadFactor": float(params["loadFactor"]) if "loadFactor" in params else None,
+            "order":      params.get("order"),   # None when absent
+            "pow2":       int(params["pow2"]) if "pow2" in params else None,
+            "size":       int(params["size"] if "size" in params else (2 ** int(params["pow2"]) * float(params["loadFactor"]))),
+            "score":      median_of_raw_data(entry["primaryMetric"]["rawData"]),
+            "unit":       entry["primaryMetric"]["scoreUnit"],
         })
-
-    has_order = any(r["order"] is not None for r in rows)
-    if not has_order:
-        for r in rows:
-            del r["order"]
 
     # Stable sort: benchmark → library → (order) → size
     rows.sort(key=lambda r: (r["benchmark"], r["library"], r.get("order", ""), r["size"]))
@@ -71,10 +68,13 @@ def parse(json_path: Path) -> list[dict]:
 
 
 def write_csv(rows: list[dict], out_path: Path) -> None:
-    has_order = "order" in rows[0] if rows else False
-    fieldnames = ["benchmark", "library"] + (["order"] if has_order else []) + ["size", "score", "unit"]
+    has_order = any(r["order"] is not None for r in rows)
+    has_loadFactor = any(r["loadFactor"] is not None for r in rows)
+    has_pow2 = any(r["pow2"] is not None for r in rows)
+
+    fieldnames = ["benchmark", "library"] + (["order"] if has_order else []) + (["loadFactor"] if has_loadFactor else []) + (["pow2"] if has_pow2 else []) + ["size", "score", "unit"]
     with out_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(rows)
 

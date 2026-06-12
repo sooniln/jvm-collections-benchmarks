@@ -14,12 +14,8 @@ repositories {
     google()
 }
 
-repositories {
-    mavenCentral()
-}
-
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -31,6 +27,9 @@ dependencies {
     implementation("androidx.collection:collection-jvm:1.6.0")
     implementation("net.sf.trove4j:core:3.1.0")
     implementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
+    implementation("com.carrotsearch:hppc:0.10.0")
+    implementation("org.agrona:agrona:2.4.1")
+    implementation("io.github.speiger:Primitive-Collections:1.0.0")
 }
 
 jmh {
@@ -86,7 +85,18 @@ registerJitAsm("Int2IntHashMapLookup") {
     )
 }
 
-registerJitAsm("jitAsmIntHashSetContains") {
+registerJitAsm("Int2IntHashMapIterate") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapIterateAsmProbe"
+    jvmArgs(
+        "-XX:CompileCommand=quiet",
+        "-XX:CompileCommand=compileonly,io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapIterateAsmProbe::iterate1",
+        "-XX:CompileCommand=print,io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapIterateAsmProbe::iterate1",
+        "-XX:CompileCommand=compileonly,io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapIterateAsmProbe::iterate2",
+        "-XX:CompileCommand=print,io.github.sooniln.jvmcollectionsbenchmark.jitasm.Int2IntHashMapIterateAsmProbe::iterate2",
+    )
+}
+
+registerJitAsm("IntHashSetContains") {
     mainClass = "io.github.sooniln.jvmcollectionsbenchmark.jitasm.IntHashSetContainsAsmProbe"
     jvmArgs(
         "-XX:CompileCommand=quiet",

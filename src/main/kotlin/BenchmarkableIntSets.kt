@@ -1,6 +1,7 @@
 package io.github.sooniln.jvmcollectionsbenchmark
 
 import androidx.collection.MutableIntSet
+import com.carrotsearch.hppc.procedures.IntProcedure
 import com.koloboke.collect.hash.HashConfig
 import com.koloboke.collect.set.hash.HashIntSet
 import com.koloboke.collect.set.hash.HashIntSets
@@ -40,6 +41,9 @@ interface BenchmarkableIntSet<T> {
             "Trove" to { TroveSet() },
             "Koloboke" to { KolobokeSet() },
             "Eclipse" to { EclipseSet() },
+            "HPPC" to { HPPCSet() },
+            "Agrona" to { AgronaSet() },
+            "PrimitiveCollections" to { PrimitiveCollectionsSet() },
         )
 
         fun from(type: String): BenchmarkableIntSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -160,6 +164,57 @@ interface BenchmarkableIntSet<T> {
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
             override fun addAll(otherSet: BenchmarkableIntSet<org.eclipse.collections.impl.set.mutable.primitive.IntHashSet>) = rawSet.addAll(otherSet.rawSet)
+            override fun clear() = rawSet.clear()
+        }
+
+        private class HPPCSet : BenchmarkableIntSet<com.carrotsearch.hppc.IntHashSet> {
+
+            override val rawSet: com.carrotsearch.hppc.IntHashSet = com.carrotsearch.hppc.IntHashSet()
+
+            override val size: Int get() = rawSet.size()
+
+            override fun newInstance(): BenchmarkableIntSet<com.carrotsearch.hppc.IntHashSet> = HPPCSet()
+            override fun ensureCapacity(capacity: Int) { rawSet.ensureCapacity(capacity) }
+            override fun forEach(action: (Int) -> Unit) { rawSet.forEach(IntProcedure { key -> action(key) }) }
+            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key.value) }
+            override fun contains(key: Int) = rawSet.contains(key)
+            override fun add(key: Int): Boolean = rawSet.add(key)
+            override fun remove(key: Int) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableIntSet<com.carrotsearch.hppc.IntHashSet>) = rawSet.addAll(otherSet.rawSet) > 0
+            override fun clear() = rawSet.clear()
+        }
+
+        private class AgronaSet : BenchmarkableIntSet<org.agrona.collections.IntHashSet> {
+
+            override val rawSet: org.agrona.collections.IntHashSet = org.agrona.collections.IntHashSet(8, .75f)
+
+            override val size: Int get() = rawSet.size
+
+            override fun newInstance(): BenchmarkableIntSet<org.agrona.collections.IntHashSet> = AgronaSet()
+            override fun ensureCapacity(capacity: Int) { }
+            override fun forEach(action: (Int) -> Unit) = rawSet.forEachInt { key -> action(key) }
+            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun contains(key: Int) = rawSet.contains(key)
+            override fun add(key: Int): Boolean = rawSet.add(key)
+            override fun remove(key: Int) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableIntSet<org.agrona.collections.IntHashSet>) = rawSet.addAll(otherSet.rawSet)
+            override fun clear() = rawSet.clear()
+        }
+
+        private class PrimitiveCollectionsSet : BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet> {
+
+            override val rawSet: speiger.src.collections.ints.sets.IntOpenHashSet = speiger.src.collections.ints.sets.IntOpenHashSet()
+
+            override val size: Int get() = rawSet.size
+
+            override fun newInstance(): BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet> = PrimitiveCollectionsSet()
+            override fun ensureCapacity(capacity: Int) { }
+            override fun forEach(action: (Int) -> Unit) = rawSet.forEach(speiger.src.collections.ints.functions.IntConsumer { key -> action(key) })
+            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun contains(key: Int) = rawSet.contains(key)
+            override fun add(key: Int): Boolean = rawSet.add(key)
+            override fun remove(key: Int) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet>) = rawSet.addAll(otherSet.rawSet)
             override fun clear() = rawSet.clear()
         }
     }

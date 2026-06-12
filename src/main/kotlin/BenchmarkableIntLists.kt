@@ -34,6 +34,9 @@ interface BenchmarkableIntList<T> {
             "AndroidX" to { AndroidXList() },
             "Trove" to { TroveList() },
             "Eclipse" to { EclipseList() },
+            "HPPC" to { HPPCList() },
+            "Agrona" to { AgronaList() },
+            "PrimitiveCollections" to { PrimitiveCollectionsList() },
         )
 
         fun from(type: String): BenchmarkableIntList<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -138,6 +141,57 @@ interface BenchmarkableIntList<T> {
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAtIndex(index)
             override fun addAll(otherList: BenchmarkableIntList<org.eclipse.collections.impl.list.mutable.primitive.IntArrayList>) = rawList.addAll(otherList.rawList)
+            override fun clear() = rawList.clear()
+        }
+
+        private class HPPCList : BenchmarkableIntList<com.carrotsearch.hppc.IntArrayList> {
+
+            override val rawList: com.carrotsearch.hppc.IntArrayList = com.carrotsearch.hppc.IntArrayList()
+
+            override val size: Int get() = rawList.size()
+
+            override fun newInstance(): BenchmarkableIntList<com.carrotsearch.hppc.IntArrayList> = HPPCList()
+            override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
+            override fun forEach(action: (Int) -> Unit) = rawList.forEach { key -> action(key.value) }
+            override fun iterate(action: (Int) -> Unit) { for (element in rawList) action(element.value) }
+            override fun indexOf(key: Int) = rawList.indexOf(key)
+            override fun add(key: Int): Boolean { rawList.add(key); return true }
+            override fun removeAt(index: Int) = rawList.removeAt(index)
+            override fun addAll(otherList: BenchmarkableIntList<com.carrotsearch.hppc.IntArrayList>) = rawList.addAll(otherList.rawList) > 0
+            override fun clear() = rawList.clear()
+        }
+
+        private class AgronaList : BenchmarkableIntList<org.agrona.collections.IntArrayList> {
+
+            override val rawList: org.agrona.collections.IntArrayList = org.agrona.collections.IntArrayList()
+
+            override val size: Int get() = rawList.size
+
+            override fun newInstance(): BenchmarkableIntList<org.agrona.collections.IntArrayList> = AgronaList()
+            override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
+            override fun forEach(action: (Int) -> Unit) = rawList.forEach { key -> action(key) }
+            override fun iterate(action: (Int) -> Unit) { for (element in rawList) action(element) }
+            override fun indexOf(key: Int) = rawList.indexOf(key)
+            override fun add(key: Int) = rawList.add(key)
+            override fun removeAt(index: Int) = rawList.removeAt(index)
+            override fun addAll(otherList: BenchmarkableIntList<org.agrona.collections.IntArrayList>) = rawList.addAll(otherList.rawList)
+            override fun clear() = rawList.clear()
+        }
+
+        private class PrimitiveCollectionsList : BenchmarkableIntList<speiger.src.collections.ints.lists.IntArrayList> {
+
+            override val rawList: speiger.src.collections.ints.lists.IntArrayList = speiger.src.collections.ints.lists.IntArrayList()
+
+            override val size: Int get() = rawList.size
+
+            override fun newInstance(): BenchmarkableIntList<speiger.src.collections.ints.lists.IntArrayList> = PrimitiveCollectionsList()
+            override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
+            override fun forEach(action: (Int) -> Unit) = rawList.forEach (speiger.src.collections.ints.functions.IntConsumer { key -> action(key) })
+            override fun iterate(action: (Int) -> Unit) { for (element in rawList) action(element) }
+            override fun indexOf(key: Int) = rawList.indexOf(key)
+            override fun add(key: Int) = rawList.add(key)
+            override fun removeAt(index: Int) = rawList.removeInt(index)
+            override fun addAll(otherList: BenchmarkableIntList<speiger.src.collections.ints.lists.IntArrayList>) = rawList.addAll(otherList.rawList)
             override fun clear() = rawList.clear()
         }
     }

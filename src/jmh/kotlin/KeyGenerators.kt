@@ -36,7 +36,7 @@ object KeyGenerators{
         val inSet = IntHashSet(inKeys.size)
         while (inSet.size < inKeys.size) {
             val key = rnd.nextInt()
-            if (!inSet.contains(key)) {
+            if (!inSet.contains(key) || key == Int.MAX_VALUE) {
                 inKeys[inSet.size] = key
                 inSet.add(key)
             }
@@ -59,7 +59,7 @@ object KeyGenerators{
         val inSet = LongHashSet(inKeys.size)
         while (inSet.size < inKeys.size) {
             val key = rnd.nextLong()
-            if (!inSet.contains(key)) {
+            if (!inSet.contains(key) || key == Long.MAX_VALUE) {
                 inKeys[inSet.size] = key
                 inSet.add(key)
             }

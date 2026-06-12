@@ -1,6 +1,7 @@
 package io.github.sooniln.jvmcollectionsbenchmark
 
 import androidx.collection.MutableIntIntMap
+import com.carrotsearch.hppc.procedures.IntIntProcedure
 import com.koloboke.collect.hash.HashConfig
 import com.koloboke.collect.map.hash.HashIntIntMap
 import com.koloboke.collect.map.hash.HashIntIntMaps
@@ -42,6 +43,9 @@ interface BenchmarkableIntMap<T> {
             "Trove" to { TroveMap() },
             "Koloboke" to { KolobokeMap() },
             "Eclipse" to { EclipseMap() },
+            "HPPC" to { HPPCMap() },
+            "Agrona" to { AgronaMap() },
+            "PrimitiveCollections" to { PrimitiveCollectionsMap() },
         )
 
         fun from(type: String): BenchmarkableIntMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -161,6 +165,57 @@ interface BenchmarkableIntMap<T> {
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableIntMap<IntIntHashMap>) = rawMap.putAll(otherMap.rawMap)
+            override fun clear() = rawMap.clear()
+        }
+
+        private class HPPCMap : BenchmarkableIntMap<com.carrotsearch.hppc.IntIntHashMap> {
+
+            override val rawMap: com.carrotsearch.hppc.IntIntHashMap = com.carrotsearch.hppc.IntIntHashMap()
+
+            override val size: Int get() = rawMap.size()
+
+            override fun newInstance(): BenchmarkableIntMap<com.carrotsearch.hppc.IntIntHashMap> = HPPCMap()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Int, Int) -> Unit) { rawMap.forEach (IntIntProcedure { key, value -> action(key, value) }) }
+            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun get(key: Int): Int = rawMap.get(key)
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
+            override fun remove(key: Int) { rawMap.remove(key) }
+            override fun putAll(otherMap: BenchmarkableIntMap<com.carrotsearch.hppc.IntIntHashMap>) { rawMap.putAll(otherMap.rawMap) }
+            override fun clear() = rawMap.clear()
+        }
+
+        private class AgronaMap : BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap> {
+
+            override val rawMap: org.agrona.collections.Int2IntHashMap = org.agrona.collections.Int2IntHashMap(8, .75f, Int.MAX_VALUE)
+
+            override val size: Int get() = rawMap.size
+
+            override fun newInstance(): BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap> = AgronaMap()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachInt { key, value -> action(key, value) }
+            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun get(key: Int): Int = rawMap.get(key)
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
+            override fun remove(key: Int) { rawMap.remove(key) }
+            override fun putAll(otherMap: BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap>) { rawMap.putAll(otherMap.rawMap) }
+            override fun clear() = rawMap.clear()
+        }
+
+        private class PrimitiveCollectionsMap : BenchmarkableIntMap<speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap> {
+
+            override val rawMap: speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap = speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap()
+
+            override val size: Int get() = rawMap.size
+
+            override fun newInstance(): BenchmarkableIntMap<speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap> = PrimitiveCollectionsMap()
+            override fun ensureCapacity(capacity: Int) {}
+            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
+            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun get(key: Int): Int = rawMap.get(key)
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
+            override fun remove(key: Int) { rawMap.remove(key) }
+            override fun putAll(otherMap: BenchmarkableIntMap<speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap>) { rawMap.putAll(otherMap.rawMap) }
             override fun clear() = rawMap.clear()
         }
     }
