@@ -191,7 +191,6 @@ interface BenchmarkableLongSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableLongSet<org.agrona.collections.LongHashSet> = AgronaSet()
-            override fun ensureCapacity(capacity: Int) { }
             override fun forEach(action: (Long) -> Unit) = rawSet.forEachLong { key -> action(key) }
             override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
             override fun contains(key: Long) = rawSet.contains(key)
@@ -208,7 +207,6 @@ interface BenchmarkableLongSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableLongSet<speiger.src.collections.longs.sets.LongOpenHashSet> = PrimitiveCollectionsSet()
-            override fun ensureCapacity(capacity: Int) { }
             override fun forEach(action: (Long) -> Unit) = rawSet.forEach(speiger.src.collections.longs.functions.LongConsumer { key -> action(key) })
             override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
             override fun contains(key: Long) = rawSet.contains(key)

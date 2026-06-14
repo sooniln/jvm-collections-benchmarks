@@ -14,19 +14,23 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A JVM specific benchmark which measures the performance of various set libraries.
  */
 @Fork(1)
 @Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongSetBenchmark {
 
-    companion object {
-        val seed = System.currentTimeMillis()
+    private companion object {
+        private val seed = System.currentTimeMillis()
+        private val timeout = 30.seconds
     }
 
     @State(Scope.Benchmark)
@@ -66,7 +70,11 @@ open class LongSetBenchmark {
             keys = LongArray(size)
             KeyGenerators.generateRandomKeys(keys, seed = seed)
 
+            val startTime = System.nanoTime()
+
+            set.ensureCapacity(keys.size)
             for (key in keys) {
+                if ((System.nanoTime() - startTime).nanoseconds > timeout) throw TimeoutException()
                 set.add(key)
             }
         }
@@ -90,7 +98,11 @@ open class LongSetBenchmark {
             outKeys = LongArray(size)
             KeyGenerators.generateKeys(order, inKeys, outKeys, seed = seed)
 
+            val startTime = System.nanoTime()
+
+            set.ensureCapacity(inKeys.size)
             for (key in inKeys) {
+                if ((System.nanoTime() - startTime).nanoseconds > timeout) throw TimeoutException()
                 set.add(key)
             }
         }

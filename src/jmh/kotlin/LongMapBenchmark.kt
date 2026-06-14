@@ -14,19 +14,23 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A JVM specific benchmark which measures the performance of various map libraries.
  */
 @Fork(1)
 @Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongMapBenchmark {
 
-    companion object {
-        val seed = System.currentTimeMillis()
+    private companion object {
+        private val seed = System.currentTimeMillis()
+        private val timeout = 30.seconds
     }
 
     @State(Scope.Benchmark)
@@ -66,9 +70,12 @@ open class LongMapBenchmark {
             keys = LongArray(size)
             KeyGenerators.generateRandomKeys(keys, seed = seed)
 
-            var value = 0
-            for (key in keys) {
-                map.put(key, value++)
+            val startTime = System.nanoTime()
+
+            map.ensureCapacity(keys.size)
+            keys.forEachIndexed { i, key ->
+                if ((System.nanoTime() - startTime).nanoseconds > timeout) throw TimeoutException()
+                map.put(key, i)
             }
         }
     }
@@ -91,7 +98,13 @@ open class LongMapBenchmark {
             outKeys = LongArray(size)
             KeyGenerators.generateKeys(order, inKeys, outKeys, seed = seed)
 
-            inKeys.forEachIndexed { i, key -> map.put(key, i) }
+            val startTime = System.nanoTime()
+
+            map.ensureCapacity(inKeys.size)
+            inKeys.forEachIndexed { i, key ->
+                if ((System.nanoTime() - startTime).nanoseconds > timeout) throw TimeoutException()
+                map.put(key, i)
+            }
         }
 
         inline fun <T> nextInKey(crossinline action: FullState.(Long) -> T): T {

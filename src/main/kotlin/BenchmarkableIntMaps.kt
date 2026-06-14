@@ -158,7 +158,6 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size()
 
             override fun newInstance(): BenchmarkableIntMap<IntIntHashMap> = EclipseMap()
-            override fun ensureCapacity(capacity: Int) {}
             override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachKeyValue { key, value -> action(key, value) }
             override fun iterate(action: (Int, Int) -> Unit) = throw UnsupportedOperationException()
             override fun get(key: Int): Int = rawMap.get(key)
@@ -175,7 +174,7 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size()
 
             override fun newInstance(): BenchmarkableIntMap<com.carrotsearch.hppc.IntIntHashMap> = HPPCMap()
-            override fun ensureCapacity(capacity: Int) {}
+            override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity) }
             override fun forEach(action: (Int, Int) -> Unit) { rawMap.forEach (IntIntProcedure { key, value -> action(key, value) }) }
             override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.get(key)
@@ -192,7 +191,6 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size
 
             override fun newInstance(): BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap> = AgronaMap()
-            override fun ensureCapacity(capacity: Int) {}
             override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachInt { key, value -> action(key, value) }
             override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.get(key)
@@ -209,7 +207,6 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size
 
             override fun newInstance(): BenchmarkableIntMap<speiger.src.collections.ints.maps.impl.hash.Int2IntOpenHashMap> = PrimitiveCollectionsMap()
-            override fun ensureCapacity(capacity: Int) {}
             override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
             override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.get(key)

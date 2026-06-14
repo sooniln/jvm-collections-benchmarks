@@ -179,7 +179,7 @@ interface BenchmarkableLongMap<T> {
         override val size: Int get() = rawMap.size()
 
         override fun newInstance(): BenchmarkableLongMap<com.carrotsearch.hppc.LongIntHashMap> = HPPCMap()
-        override fun ensureCapacity(capacity: Int) {}
+        override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity) }
         override fun forEach(action: (Long, Int) -> Unit) { rawMap.forEach (LongIntProcedure { key, value -> action(key, value) }) }
         override fun iterate(action: (Long, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
         override fun get(key: Long): Int = rawMap.get(key)
@@ -196,7 +196,6 @@ interface BenchmarkableLongMap<T> {
         override val size: Int get() = rawMap.size
 
         override fun newInstance(): BenchmarkableLongMap<org.agrona.collections.Long2LongHashMap> = AgronaMap()
-        override fun ensureCapacity(capacity: Int) {}
         override fun forEach(action: (Long, Int) -> Unit) = rawMap.forEachLong { key, value -> action(key, value.toInt()) }
         override fun iterate(action: (Long, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value.toInt()) }
         override fun get(key: Long): Int = rawMap.get(key).toInt()
@@ -213,7 +212,6 @@ interface BenchmarkableLongMap<T> {
         override val size: Int get() = rawMap.size
 
         override fun newInstance(): BenchmarkableLongMap<speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap> = PrimitiveCollectionsMap()
-        override fun ensureCapacity(capacity: Int) {}
         override fun forEach(action: (Long, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
         override fun iterate(action: (Long, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
         override fun get(key: Long): Int = rawMap.get(key)

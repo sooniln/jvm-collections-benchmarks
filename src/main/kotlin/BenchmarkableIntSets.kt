@@ -191,7 +191,6 @@ interface BenchmarkableIntSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableIntSet<org.agrona.collections.IntHashSet> = AgronaSet()
-            override fun ensureCapacity(capacity: Int) { }
             override fun forEach(action: (Int) -> Unit) = rawSet.forEachInt { key -> action(key) }
             override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
             override fun contains(key: Int) = rawSet.contains(key)
@@ -208,7 +207,6 @@ interface BenchmarkableIntSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet> = PrimitiveCollectionsSet()
-            override fun ensureCapacity(capacity: Int) { }
             override fun forEach(action: (Int) -> Unit) = rawSet.forEach(speiger.src.collections.ints.functions.IntConsumer { key -> action(key) })
             override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
             override fun contains(key: Int) = rawSet.contains(key)
