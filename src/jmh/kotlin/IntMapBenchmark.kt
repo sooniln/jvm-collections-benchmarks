@@ -11,6 +11,7 @@ import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.annotations.Timeout
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * A JVM specific benchmark which measures the performance of various map libraries.
  */
 @Fork(1)
+@Timeout(time = 30, timeUnit = TimeUnit.SECONDS)
 @Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
@@ -160,7 +162,10 @@ open class IntMapBenchmark {
     @Benchmark
     fun naiveCopy(state: RandomState): BenchmarkableIntMap<*> {
         val copy = state.map.newInstance()
-        state.map.forEach { key, value -> copy.put(key, value) }
+        state.map.forEach { key, value ->
+            if (Thread.interrupted()) throw InterruptedException()
+            copy.put(key, value)
+        }
         return copy
     }
 

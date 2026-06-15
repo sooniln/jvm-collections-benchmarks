@@ -50,6 +50,10 @@ registerMemoryMeasurementTask("memorySplits") {
     mainClass = "io.github.sooniln.jvmcollectionsbenchmark.memory.SplitMemoryMeasurementKt"
 }
 
+registerMemoryMeasurementTask("naiveCopySim") {
+    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.NaiveCopySimKt"
+}
+
 registerJMHTask("IntList") {
     includes.set(listOf("IntListBenchmark\\."))
 }
