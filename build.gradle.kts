@@ -32,14 +32,15 @@ dependencies {
     implementation("io.github.speiger:Primitive-Collections:1.0.0")
 }
 
+private val jmhIncludes: Provider<String> = providers.gradleProperty("jmhIncludes")
+
 jmh {
     includeTests = false
     verbosity = "EXTRA"
     failOnError = true
     resultFormat = "JSON"
 
-    // if a jmhIncludes property is set, forward it to JMH
-    findProperty("jmhIncludes")?.also { includes.set(listOf(it as String)) }
+    if (jmhIncludes.isPresent) includes.set(decodeArgs(jmhIncludes.get()))
 }
 
 registerMemoryMeasurementTask("memory") {
@@ -168,6 +169,7 @@ private val jmhPow2: Provider<String> = providers.gradleProperty("jmhPow2")
 private val jmhLoadFactor: Provider<String> = providers.gradleProperty("jmhLoadFactor")
 private val jmhType: Provider<String> = providers.gradleProperty("jmhType")
 private val jmhOrder: Provider<String> = providers.gradleProperty("jmhOrder")
+private val jmhSize: Provider<String> = providers.gradleProperty("jmhSize")
 
 tasks.withType<JMHTask> {
     // ensure JMH tasks are never cached
@@ -185,6 +187,7 @@ tasks.withType<JMHTask> {
     if (jmhLoadFactor.isPresent) benchmarkParameters.put("loadFactor", decodeArgs(jmhLoadFactor.get()))
     if (jmhType.isPresent) benchmarkParameters.put("type", decodeArgs(jmhType.get()))
     if (jmhOrder.isPresent) benchmarkParameters.put("order", decodeArgs(jmhOrder.get()))
+    if (jmhSize.isPresent) benchmarkParameters.put("size", decodeArgs(jmhSize.get()))
 }
 
 private fun decodeArgs(args: String): ListProperty<String> {

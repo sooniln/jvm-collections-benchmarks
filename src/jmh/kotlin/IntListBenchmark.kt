@@ -21,7 +21,7 @@ import kotlin.random.Random
  * A JVM specific benchmark which measures the performance of various list libraries.
  */
 @Fork(1)
-@Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)

@@ -73,6 +73,7 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<IntHashSet> = FastCollectSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
+            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { key -> action(key) }
             override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)

@@ -78,6 +78,7 @@ interface BenchmarkableLongMap<T> {
 
             override fun newInstance(): BenchmarkableLongMap<Long2IntHashMap> = FastCollectMap()
             override fun ensureCapacity(capacity: Int) = rawMap.ensureCapacity(capacity)
+            override fun forEach(action: (Long, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
             override fun iterate(action: (Long, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
             override fun get(key: Long): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Long, value: Int) { rawMap[key] = value }

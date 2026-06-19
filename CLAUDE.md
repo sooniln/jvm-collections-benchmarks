@@ -6,6 +6,7 @@ JVM ecosystem.
 Various flags may be used to set JMH parameters for JMH gradle tasks:
 * -P-i=<number> to set the number of iterations
 * -P-wi=<number> to set the number of warmup iterations
+* -PjmhIncludes="<regex>" to only run benchmarks matching the given regular expression
 * -PjmhSize="<number>(,<number>...)" to set the size parameter
 * -PjmhType="<type>(,<type>...)" to set the type parameter
 * -PjmhOrder="<order>(,<order>...)" to set the order parameter

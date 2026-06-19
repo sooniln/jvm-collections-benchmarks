@@ -22,17 +22,17 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * A JVM specific benchmark which measures the performance of various map libraries.
  */
-@Fork(1)
+@Fork(1, jvmArgs = ["-Xms2g", "-Xmx6g"])
 @Timeout(time = 30, timeUnit = TimeUnit.SECONDS)
-@Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 5000, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongMapBenchmark {
 
     private companion object {
         private val seed = System.currentTimeMillis()
-        private val timeout = 30.seconds
+        private val timeout = 300.seconds
     }
 
     @State(Scope.Benchmark)
@@ -40,22 +40,13 @@ open class LongMapBenchmark {
         @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Eclipse", "HPPC", "Agrona", "PrimitiveCollections")
         var type: String = ""
 
-        @Param("12", "14", "16", "18", "20", "22", "24")
-        var pow2: Int = 12
+        @Param("514","766","1026","1534","2050","3070","4098","6142","8194","12286","16386","24574","32770","49150","65538","98302","131074","196606","262146","393214","524290","786430","1048578","1572862","2097154","3145726","4194306","6291454","8388610","12582910","16777218","25165822","33554434","50331646","67108866","100663294")
+        var size: Int = 12
 
-        @Param(".50", ".75")
-        var loadFactor: Float = .75f
-
-        var size: Int = 0
         lateinit var map: BenchmarkableLongMap<*>
 
         @Setup(Level.Trial)
         open fun setup() {
-            if (loadFactor > .5 && type == "Eclipse") {
-                throw UnsupportedOperationException("eclipse does not support load factors over .5")
-            }
-
-            size = ((1 shl pow2) * loadFactor).toInt() - 2
             map = BenchmarkableLongMap.from(type)
         }
     }
@@ -193,9 +184,17 @@ open class LongMapBenchmark {
 
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
-    fun iterate(state: FullState, bh: Blackhole) = state.map.iterate { key, value -> bh.consume(key); bh.consume(value) }
+    fun iterate(state: RandomState, bh: Blackhole) = state.map.iterate { key, value ->
+        if (Thread.interrupted()) throw InterruptedException()
+        bh.consume(key)
+        bh.consume(value)
+    }
 
     @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
-    fun forEach(state: FullState, bh: Blackhole) = state.map.forEach { key, value -> bh.consume(key); bh.consume(value) }
+    fun forEach(state: RandomState, bh: Blackhole) = state.map.forEach { key, value ->
+        if (Thread.interrupted()) throw InterruptedException()
+        bh.consume(key)
+        bh.consume(value)
+    }
 }
