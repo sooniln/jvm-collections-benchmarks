@@ -22,17 +22,17 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * A JVM specific benchmark which measures the performance of various set libraries.
  */
-@Fork(1, jvmArgs = ["-Xms2g", "-Xmx6g"])
+@Fork(1, jvmArgs = ["-Xmx6g"])
 @Timeout(time = 30, timeUnit = TimeUnit.SECONDS)
-@Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 250, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 10, time = 250, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class LongSetBenchmark {
 
     private companion object {
         private val seed = System.currentTimeMillis()
-        private val timeout = 300.seconds
+        private val timeout = 120.seconds
     }
 
     @State(Scope.Benchmark)
@@ -150,6 +150,7 @@ open class LongSetBenchmark {
         }
     }
 
+    @OutputTimeUnit(TimeUnit.MICROSECONDS)
     @Benchmark
     fun naiveCopy(state: RandomState): BenchmarkableLongSet<*> {
         val copy = state.set.newInstance()

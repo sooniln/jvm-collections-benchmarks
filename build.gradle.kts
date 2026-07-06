@@ -21,7 +21,7 @@ kotlin {
 dependencies {
     implementation("org.openjdk.jol:jol-core:0.17")
 
-    implementation("io.github.sooniln:fastcollect-kotlin-jvm:2.0.0")
+    implementation("io.github.sooniln:fastcollect-kotlin-jvm:2.0.2")
     implementation("it.unimi.dsi:fastutil:8.5.18")
     implementation("org.eclipse.collections:eclipse-collections:13.0.0")
     implementation("androidx.collection:collection-jvm:1.6.0")
@@ -165,8 +165,6 @@ private val exclusiveServiceProvider = gradle.sharedServices.registerIfAbsent("e
     maxParallelUsages.set(1)
 }
 
-private val jmhPow2: Provider<String> = providers.gradleProperty("jmhPow2")
-private val jmhLoadFactor: Provider<String> = providers.gradleProperty("jmhLoadFactor")
 private val jmhType: Provider<String> = providers.gradleProperty("jmhType")
 private val jmhOrder: Provider<String> = providers.gradleProperty("jmhOrder")
 private val jmhSize: Provider<String> = providers.gradleProperty("jmhSize")
@@ -183,8 +181,6 @@ tasks.withType<JMHTask> {
     finalizedBy(copyTask)
 
     // forward various parameters to JMH
-    if (jmhPow2.isPresent) benchmarkParameters.put("pow2", decodeArgs(jmhPow2.get()))
-    if (jmhLoadFactor.isPresent) benchmarkParameters.put("loadFactor", decodeArgs(jmhLoadFactor.get()))
     if (jmhType.isPresent) benchmarkParameters.put("type", decodeArgs(jmhType.get()))
     if (jmhOrder.isPresent) benchmarkParameters.put("order", decodeArgs(jmhOrder.get()))
     if (jmhSize.isPresent) benchmarkParameters.put("size", decodeArgs(jmhSize.get()))
