@@ -99,7 +99,7 @@ interface BenchmarkableLongMap<T> {
             override fun forEach(action: (Long, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
             override fun iterate(action: (Long, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
             override fun get(key: Long): Int = rawMap.getOrDefault(key, 0)
-            override fun put(key: Long, value: Int) { rawMap[key] = value }
+            override fun put(key: Long, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Long) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableLongMap<Long2IntOpenHashMap>) = rawMap.putAll(otherMap.rawMap)
             override fun clear() = rawMap.clear()

@@ -51,10 +51,6 @@ registerMemoryMeasurementTask("memorySplits") {
     mainClass = "io.github.sooniln.jvmcollectionsbenchmark.memory.SplitMemoryMeasurementKt"
 }
 
-registerMemoryMeasurementTask("naiveCopySim") {
-    mainClass = "io.github.sooniln.jvmcollectionsbenchmark.NaiveCopySimKt"
-}
-
 registerJMHTask("IntList") {
     includes.set(listOf("IntListBenchmark\\."))
 }
@@ -127,7 +123,7 @@ private fun registerMemoryMeasurementTask(name: String, configuration: JavaExec.
     group = "benchmark"
     description = "Measure memory of collections"
     classpath = sourceSets.main.get().runtimeClasspath
-    jvmArgs("-Djdk.attach.allowAttachSelf=true")
+    jvmArgs("-Djdk.attach.allowAttachSelf=true","-Xmx6g")
 
     configuration()
 }

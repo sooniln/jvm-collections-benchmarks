@@ -95,7 +95,7 @@ interface BenchmarkableIntMap<T> {
             override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
             override fun iterate(action: (Int, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
-            override fun put(key: Int, value: Int) { rawMap[key] = value }
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableIntMap<Int2IntOpenHashMap>) = rawMap.putAll(otherMap.rawMap)
             override fun clear() = rawMap.clear()
