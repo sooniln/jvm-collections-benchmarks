@@ -48,7 +48,6 @@ interface BenchmarkableLongMap<T> {
             "Eclipse" to { EclipseMap() },
             "HPPC" to { HPPCMap() },
             "Agrona" to { AgronaMap() },
-            "PrimitiveCollections" to { PrimitiveCollectionsMap() },
         )
 
         fun from(type: String): BenchmarkableLongMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -203,22 +202,6 @@ interface BenchmarkableLongMap<T> {
         override fun put(key: Long, value: Int) { rawMap.put(key, value.toLong()) }
         override fun remove(key: Long) { rawMap.remove(key) }
         override fun putAll(otherMap: BenchmarkableLongMap<org.agrona.collections.Long2LongHashMap>) { rawMap.putAll(otherMap.rawMap) }
-        override fun clear() = rawMap.clear()
-    }
-
-    private class PrimitiveCollectionsMap : BenchmarkableLongMap<speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap> {
-
-        override val rawMap: speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap = speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap()
-
-        override val size: Int get() = rawMap.size
-
-        override fun newInstance(): BenchmarkableLongMap<speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap> = PrimitiveCollectionsMap()
-        override fun forEach(action: (Long, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
-        override fun iterate(action: (Long, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
-        override fun get(key: Long): Int = rawMap.getOrDefault(key, 0)
-        override fun put(key: Long, value: Int) { rawMap.put(key, value) }
-        override fun remove(key: Long) { rawMap.remove(key) }
-        override fun putAll(otherMap: BenchmarkableLongMap<speiger.src.collections.longs.maps.impl.hash.Long2IntOpenHashMap>) { rawMap.putAll(otherMap.rawMap) }
         override fun clear() = rawMap.clear()
     }
 }

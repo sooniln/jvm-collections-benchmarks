@@ -43,7 +43,6 @@ interface BenchmarkableIntSet<T> {
             "Eclipse" to { EclipseSet() },
             "HPPC" to { HPPCSet() },
             "Agrona" to { AgronaSet() },
-            "PrimitiveCollections" to { PrimitiveCollectionsSet() },
         )
 
         fun from(type: String): BenchmarkableIntSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -198,22 +197,6 @@ interface BenchmarkableIntSet<T> {
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
             override fun addAll(otherSet: BenchmarkableIntSet<org.agrona.collections.IntHashSet>) = rawSet.addAll(otherSet.rawSet)
-            override fun clear() = rawSet.clear()
-        }
-
-        private class PrimitiveCollectionsSet : BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet> {
-
-            override val rawSet: speiger.src.collections.ints.sets.IntOpenHashSet = speiger.src.collections.ints.sets.IntOpenHashSet()
-
-            override val size: Int get() = rawSet.size
-
-            override fun newInstance(): BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet> = PrimitiveCollectionsSet()
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach(speiger.src.collections.ints.functions.IntConsumer { key -> action(key) })
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
-            override fun contains(key: Int) = rawSet.contains(key)
-            override fun add(key: Int): Boolean = rawSet.add(key)
-            override fun remove(key: Int) = rawSet.remove(key)
-            override fun addAll(otherSet: BenchmarkableIntSet<speiger.src.collections.ints.sets.IntOpenHashSet>) = rawSet.addAll(otherSet.rawSet)
             override fun clear() = rawSet.clear()
         }
     }

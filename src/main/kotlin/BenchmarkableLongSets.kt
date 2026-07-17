@@ -43,7 +43,6 @@ interface BenchmarkableLongSet<T> {
             "Eclipse" to { EclipseSet() },
             "HPPC" to { HPPCSet() },
             "Agrona" to { AgronaSet() },
-            "PrimitiveCollections" to { PrimitiveCollectionsSet() },
         )
 
         fun from(type: String): BenchmarkableLongSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -198,22 +197,6 @@ interface BenchmarkableLongSet<T> {
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
             override fun addAll(otherSet: BenchmarkableLongSet<org.agrona.collections.LongHashSet>) = rawSet.addAll(otherSet.rawSet)
-            override fun clear() = rawSet.clear()
-        }
-
-        private class PrimitiveCollectionsSet : BenchmarkableLongSet<speiger.src.collections.longs.sets.LongOpenHashSet> {
-
-            override val rawSet: speiger.src.collections.longs.sets.LongOpenHashSet = speiger.src.collections.longs.sets.LongOpenHashSet()
-
-            override val size: Int get() = rawSet.size
-
-            override fun newInstance(): BenchmarkableLongSet<speiger.src.collections.longs.sets.LongOpenHashSet> = PrimitiveCollectionsSet()
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach(speiger.src.collections.longs.functions.LongConsumer { key -> action(key) })
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
-            override fun contains(key: Long) = rawSet.contains(key)
-            override fun add(key: Long): Boolean = rawSet.add(key)
-            override fun remove(key: Long) = rawSet.remove(key)
-            override fun addAll(otherSet: BenchmarkableLongSet<speiger.src.collections.longs.sets.LongOpenHashSet>) = rawSet.addAll(otherSet.rawSet)
             override fun clear() = rawSet.clear()
         }
     }

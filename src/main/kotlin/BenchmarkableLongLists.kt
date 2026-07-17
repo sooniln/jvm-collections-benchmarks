@@ -36,7 +36,6 @@ interface BenchmarkableLongList<T> {
             "Eclipse" to { EclipseList() },
             "HPPC" to { HPPCList() },
             "Agrona" to { AgronaList() },
-            "PrimitiveCollections" to { PrimitiveCollectionsList() },
         )
 
         fun from(type: String): BenchmarkableLongList<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -175,23 +174,6 @@ interface BenchmarkableLongList<T> {
             override fun add(key: Long): Boolean { rawList.add(key); return true }
             override fun removeAt(index: Int) = rawList.removeAt(index)
             override fun addAll(otherList: BenchmarkableLongList<org.agrona.collections.LongArrayList>) = rawList.addAll(otherList.rawList)
-            override fun clear() = rawList.clear()
-        }
-
-        private class PrimitiveCollectionsList : BenchmarkableLongList<speiger.src.collections.longs.lists.LongArrayList> {
-
-            override val rawList: speiger.src.collections.longs.lists.LongArrayList = speiger.src.collections.longs.lists.LongArrayList()
-
-            override val size: Int get() = rawList.size
-
-            override fun newInstance(): BenchmarkableLongList<speiger.src.collections.longs.lists.LongArrayList> = PrimitiveCollectionsList()
-            override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Long) -> Unit) = rawList.forEach (speiger.src.collections.longs.functions.LongConsumer { key -> action(key) })
-            override fun iterate(action: (Long) -> Unit) { for (element in rawList) action(element) }
-            override fun indexOf(key: Long) = rawList.indexOf(key)
-            override fun add(key: Long) = rawList.add(key)
-            override fun removeAt(index: Int) = rawList.removeLong(index)
-            override fun addAll(otherList: BenchmarkableLongList<speiger.src.collections.longs.lists.LongArrayList>) = rawList.addAll(otherList.rawList)
             override fun clear() = rawList.clear()
         }
     }
