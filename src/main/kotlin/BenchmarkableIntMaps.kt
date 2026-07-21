@@ -44,6 +44,7 @@ interface BenchmarkableIntMap<T> {
             "Eclipse" to { EclipseMap() },
             "HPPC" to { HPPCMap() },
             "Agrona" to { AgronaMap() },
+            "LibGDX" to { LibGdxMap() },
         )
 
         fun from(type: String): BenchmarkableIntMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -196,6 +197,22 @@ interface BenchmarkableIntMap<T> {
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
             override fun putAll(otherMap: BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap>) { rawMap.putAll(otherMap.rawMap) }
+            override fun clear() = rawMap.clear()
+        }
+
+        private class LibGdxMap : BenchmarkableIntMap<com.badlogic.gdx.utils.IntIntMap> {
+
+            override val rawMap: com.badlogic.gdx.utils.IntIntMap = com.badlogic.gdx.utils.IntIntMap()
+
+            override val size: Int get() = rawMap.size
+
+            override fun newInstance(): BenchmarkableIntMap<com.badlogic.gdx.utils.IntIntMap> = LibGdxMap()
+            override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity - rawMap.size) }
+            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun get(key: Int): Int = rawMap.get(key, 0)
+            override fun put(key: Int, value: Int) { rawMap.put(key, value) }
+            override fun remove(key: Int) { rawMap.remove(key, 0) }
+            override fun putAll(otherMap: BenchmarkableIntMap<com.badlogic.gdx.utils.IntIntMap>) { rawMap.putAll(otherMap.rawMap) }
             override fun clear() = rawMap.clear()
         }
     }

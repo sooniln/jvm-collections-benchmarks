@@ -29,6 +29,7 @@ dependencies {
     implementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
     implementation("com.carrotsearch:hppc:0.10.0")
     implementation("org.agrona:agrona:2.4.1")
+    implementation("com.badlogicgames.gdx:gdx:1.14.2")
 }
 
 private val jmhIncludes: Provider<String> = providers.gradleProperty("jmhIncludes")

@@ -36,6 +36,7 @@ interface BenchmarkableLongList<T> {
             "Eclipse" to { EclipseList() },
             "HPPC" to { HPPCList() },
             "Agrona" to { AgronaList() },
+            "LibGDX" to { LibGdxList() },
         )
 
         fun from(type: String): BenchmarkableLongList<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -174,6 +175,22 @@ interface BenchmarkableLongList<T> {
             override fun add(key: Long): Boolean { rawList.add(key); return true }
             override fun removeAt(index: Int) = rawList.removeAt(index)
             override fun addAll(otherList: BenchmarkableLongList<org.agrona.collections.LongArrayList>) = rawList.addAll(otherList.rawList)
+            override fun clear() = rawList.clear()
+        }
+
+        private class LibGdxList : BenchmarkableLongList<com.badlogic.gdx.utils.LongArray> {
+
+            override val rawList: com.badlogic.gdx.utils.LongArray = com.badlogic.gdx.utils.LongArray()
+
+            override val size: Int get() = rawList.size
+
+            override fun newInstance(): BenchmarkableLongList<com.badlogic.gdx.utils.LongArray> = LibGdxList()
+            override fun ensureCapacity(capacity: Int) { rawList.ensureCapacity(capacity - rawList.size) }
+            override fun iterate(action: (Long) -> Unit) { for (i in 0 until rawList.size) action(rawList[i]) }
+            override fun indexOf(key: Long) = rawList.indexOf(key)
+            override fun add(key: Long): Boolean { rawList.add(key); return true }
+            override fun removeAt(index: Int) = rawList.removeIndex(index)
+            override fun addAll(otherList: BenchmarkableLongList<com.badlogic.gdx.utils.LongArray>): Boolean { rawList.addAll(otherList.rawList); return true }
             override fun clear() = rawList.clear()
         }
     }

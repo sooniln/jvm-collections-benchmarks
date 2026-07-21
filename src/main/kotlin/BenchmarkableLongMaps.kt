@@ -9,7 +9,6 @@ import com.koloboke.function.LongIntConsumer
 import gnu.trove.impl.Constants
 import gnu.trove.map.hash.TLongIntHashMap
 import io.github.sooniln.fastcollect.longs.Long2IntHashMap
-import io.github.sooniln.fastcollect.longs.getOrDefault
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import org.eclipse.collections.impl.map.mutable.primitive.LongIntHashMap
 import kotlin.collections.component1
@@ -48,6 +47,7 @@ interface BenchmarkableLongMap<T> {
             "Eclipse" to { EclipseMap() },
             "HPPC" to { HPPCMap() },
             "Agrona" to { AgronaMap() },
+            "LibGDX" to { LibGdxMap() },
         )
 
         fun from(type: String): BenchmarkableLongMap<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -202,6 +202,22 @@ interface BenchmarkableLongMap<T> {
         override fun put(key: Long, value: Int) { rawMap.put(key, value.toLong()) }
         override fun remove(key: Long) { rawMap.remove(key) }
         override fun putAll(otherMap: BenchmarkableLongMap<org.agrona.collections.Long2LongHashMap>) { rawMap.putAll(otherMap.rawMap) }
+        override fun clear() = rawMap.clear()
+    }
+
+    private class LibGdxMap : BenchmarkableLongMap<com.badlogic.gdx.utils.LongMap<Int>> {
+
+        override val rawMap: com.badlogic.gdx.utils.LongMap<Int> = com.badlogic.gdx.utils.LongMap<Int>()
+
+        override val size: Int get() = rawMap.size
+
+        override fun newInstance(): BenchmarkableLongMap<com.badlogic.gdx.utils.LongMap<Int>> = LibGdxMap()
+        override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity - rawMap.size) }
+        override fun iterate(action: (Long, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+        override fun get(key: Long): Int = rawMap.get(key, 0)
+        override fun put(key: Long, value: Int) { rawMap.put(key, value) }
+        override fun remove(key: Long) { rawMap.remove(key) }
+        override fun putAll(otherMap: BenchmarkableLongMap<com.badlogic.gdx.utils.LongMap<Int>>) { rawMap.putAll(otherMap.rawMap) }
         override fun clear() = rawMap.clear()
     }
 }

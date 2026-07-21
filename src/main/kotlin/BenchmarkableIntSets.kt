@@ -43,6 +43,7 @@ interface BenchmarkableIntSet<T> {
             "Eclipse" to { EclipseSet() },
             "HPPC" to { HPPCSet() },
             "Agrona" to { AgronaSet() },
+            "LibGDX" to { LibGdxSet() },
         )
 
         fun from(type: String): BenchmarkableIntSet<*> = map.getOrElse(type) { throw IllegalArgumentException("Unknown type: $type") }.invoke()
@@ -197,6 +198,22 @@ interface BenchmarkableIntSet<T> {
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
             override fun addAll(otherSet: BenchmarkableIntSet<org.agrona.collections.IntHashSet>) = rawSet.addAll(otherSet.rawSet)
+            override fun clear() = rawSet.clear()
+        }
+
+        private class LibGdxSet : BenchmarkableIntSet<com.badlogic.gdx.utils.IntSet> {
+
+            override val rawSet: com.badlogic.gdx.utils.IntSet = com.badlogic.gdx.utils.IntSet()
+
+            override val size: Int get() = rawSet.size
+
+            override fun newInstance(): BenchmarkableIntSet<com.badlogic.gdx.utils.IntSet> = LibGdxSet()
+            override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity - rawSet.size)
+            override fun iterate(action: (Int) -> Unit) { val iterator = rawSet.iterator(); while (iterator.hasNext) action(iterator.next()) }
+            override fun contains(key: Int) = rawSet.contains(key)
+            override fun add(key: Int): Boolean = rawSet.add(key)
+            override fun remove(key: Int) = rawSet.remove(key)
+            override fun addAll(otherSet: BenchmarkableIntSet<com.badlogic.gdx.utils.IntSet>): Boolean { rawSet.addAll(otherSet.rawSet); return true }
             override fun clear() = rawSet.clear()
         }
     }
