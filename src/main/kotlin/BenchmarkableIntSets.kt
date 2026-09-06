@@ -7,7 +7,7 @@ import com.koloboke.collect.set.hash.HashIntSet
 import com.koloboke.collect.set.hash.HashIntSets
 import gnu.trove.impl.Constants
 import gnu.trove.set.hash.TIntHashSet
-import io.github.sooniln.fastcollect.ints.IntHashSet
+import io.github.sooniln.fastcollect.*
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import java.util.function.IntConsumer
 
@@ -24,8 +24,8 @@ interface BenchmarkableIntSet<T> {
     }
 
     fun ensureCapacity(capacity: Int) {}
-    fun forEach(action: (Int) -> Unit) = iterate(action)
-    fun iterate(action: (Int) -> Unit)
+    fun forEach(action: IntConsumer) = iterate(action)
+    fun iterate(action: IntConsumer)
     fun contains(key: Int): Boolean
     fun add(key: Int): Boolean
     fun remove(key: Int): Boolean
@@ -57,7 +57,7 @@ interface BenchmarkableIntSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableIntSet<HashSet<Int>> = JreSet()
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -73,8 +73,8 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<IntHashSet> = FastCollectSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { key -> action(key) }
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: IntConsumer) = rawSet.foreach { key -> action.accept(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -90,9 +90,9 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<IntOpenHashSet> = FastutilSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach(IntConsumer { key -> action(key) })
+            override fun forEach(action: IntConsumer) = rawSet.forEach(IntConsumer { key -> action.accept(key) })
             @Suppress("DEPRECATION")
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -107,8 +107,8 @@ interface BenchmarkableIntSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableIntSet<MutableIntSet> = AndroidXSet()
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { action(it) }
-            override fun iterate(action: (Int) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: IntConsumer) = rawSet.forEach { action.accept(it) }
+            override fun iterate(action: IntConsumer) = throw UnsupportedOperationException()
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -124,8 +124,8 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<TIntHashSet> = TroveSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) { rawSet.forEach { action(it); return@forEach true } }
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: IntConsumer) { rawSet.forEach { action.accept(it); return@forEach true } }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int) = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -141,9 +141,9 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<HashIntSet> = KolobokeSet()
             override fun ensureCapacity(capacity: Int) { rawSet.ensureCapacity(capacity.toLong()) }
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { key -> action(key) }
+            override fun forEach(action: IntConsumer) = rawSet.forEach { key -> action.accept(key) }
             @Suppress("DEPRECATION")
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.removeInt(key)
@@ -159,8 +159,8 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<org.eclipse.collections.impl.set.mutable.primitive.IntHashSet> = EclipseSet()
             override fun ensureCapacity(capacity: Int) {}
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEach { key -> action(key) }
-            override fun iterate(action: (Int) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: IntConsumer) = rawSet.forEach { key -> action.accept(key) }
+            override fun iterate(action: IntConsumer) = throw UnsupportedOperationException()
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -176,8 +176,8 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<com.carrotsearch.hppc.IntHashSet> = HPPCSet()
             override fun ensureCapacity(capacity: Int) { rawSet.ensureCapacity(capacity) }
-            override fun forEach(action: (Int) -> Unit) { rawSet.forEach(IntProcedure { key -> action(key) }) }
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key.value) }
+            override fun forEach(action: IntConsumer) { rawSet.forEach(IntProcedure { key -> action.accept(key) }) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key.value) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -192,8 +192,8 @@ interface BenchmarkableIntSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableIntSet<org.agrona.collections.IntHashSet> = AgronaSet()
-            override fun forEach(action: (Int) -> Unit) = rawSet.forEachInt { key -> action(key) }
-            override fun iterate(action: (Int) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: IntConsumer) = rawSet.forEachInt { key -> action.accept(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)
@@ -209,7 +209,7 @@ interface BenchmarkableIntSet<T> {
 
             override fun newInstance(): BenchmarkableIntSet<com.badlogic.gdx.utils.IntSet> = LibGdxSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity - rawSet.size)
-            override fun iterate(action: (Int) -> Unit) { val iterator = rawSet.iterator(); while (iterator.hasNext) action(iterator.next()) }
+            override fun iterate(action: IntConsumer) { val iterator = rawSet.iterator(); while (iterator.hasNext) action.accept(iterator.next()) }
             override fun contains(key: Int) = rawSet.contains(key)
             override fun add(key: Int): Boolean = rawSet.add(key)
             override fun remove(key: Int) = rawSet.remove(key)

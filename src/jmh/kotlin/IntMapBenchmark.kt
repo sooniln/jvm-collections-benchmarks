@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 @Fork(1, jvmArgs = ["-Xmx6g"])
 @Timeout(time = 30, timeUnit = TimeUnit.SECONDS)
 @Warmup(iterations = 10, time = 250, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 open class IntMapBenchmark {
@@ -37,7 +37,7 @@ open class IntMapBenchmark {
 
     @State(Scope.Benchmark)
     open class BaseState {
-        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Eclipse", "HPPC", "Agrona", "PrimitiveCollections")
+        @Param("JRE", "FastCollect", "Fastutil", "AndroidX", "Trove", "Eclipse", "HPPC", "Agrona", "LibGDX")
         var type: String = ""
 
         @Param("514","766","1026","1534","2050","3070","4098","6142","8194","12286","16386","24574","32770","49150","65538","98302","131074","196606","262146","393214","524290","786430","1048578","1572862","2097154","3145726","4194306","6291454","8388610","12582910","16777218","25165822","33554434","50331646","67108866","100663294")

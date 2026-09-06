@@ -8,7 +8,7 @@ import com.koloboke.collect.map.hash.HashIntIntMaps
 import com.koloboke.function.IntIntConsumer
 import gnu.trove.impl.Constants
 import gnu.trove.map.hash.TIntIntHashMap
-import io.github.sooniln.fastcollect.ints.Int2IntHashMap
+import io.github.sooniln.fastcollect.*
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap
 
@@ -25,8 +25,8 @@ interface BenchmarkableIntMap<T> {
     }
 
     fun ensureCapacity(capacity: Int) {}
-    fun forEach(action: (Int, Int) -> Unit) = iterate(action)
-    fun iterate(action: (Int, Int) -> Unit)
+    fun forEach(action: IntIntConsumer) = iterate(action)
+    fun iterate(action: IntIntConsumer)
     fun get(key: Int): Int
     fun put(key: Int, value: Int)
     fun remove(key: Int)
@@ -58,7 +58,7 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size
 
             override fun newInstance(): BenchmarkableIntMap<HashMap<Int, Int>> = JreMap()
-            override fun iterate(action: (Int, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
+            override fun iterate(action: IntIntConsumer) { for ((key, value) in rawMap) action.accept(key, value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap[key] = value }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -74,8 +74,8 @@ interface BenchmarkableIntMap<T> {
 
             override fun newInstance(): BenchmarkableIntMap<Int2IntHashMap> = FastCollectMap()
             override fun ensureCapacity(capacity: Int) = rawMap.ensureCapacity(capacity)
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
-            override fun iterate(action: (Int, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
+            override fun forEach(action: IntIntConsumer) = rawMap.foreach { key, value -> action.accept(key, value) }
+            override fun iterate(action: IntIntConsumer) { for ((key, value) in rawMap) action.accept(key, value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap[key] = value }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -92,8 +92,8 @@ interface BenchmarkableIntMap<T> {
             override fun newInstance(): BenchmarkableIntMap<Int2IntOpenHashMap> = FastutilMap()
             override fun ensureCapacity(capacity: Int) = rawMap.ensureCapacity(capacity)
             @Suppress("JavaMapForEach")
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
-            override fun iterate(action: (Int, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
+            override fun forEach(action: IntIntConsumer) = rawMap.forEach { key, value -> action.accept(key, value) }
+            override fun iterate(action: IntIntConsumer) { for ((key, value) in rawMap) action.accept(key, value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -108,8 +108,8 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size
 
             override fun newInstance(): BenchmarkableIntMap<MutableIntIntMap> = AndroidXMap()
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach { key, value -> action(key, value) }
-            override fun iterate(action: (Int, Int) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: IntIntConsumer) = rawMap.forEach { key, value -> action.accept(key, value) }
+            override fun iterate(action: IntIntConsumer) = throw UnsupportedOperationException()
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap[key] = value }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -125,8 +125,8 @@ interface BenchmarkableIntMap<T> {
 
             override fun newInstance(): BenchmarkableIntMap<TIntIntHashMap> = TroveMap()
             override fun ensureCapacity(capacity: Int) = rawMap.ensureCapacity(capacity)
-            override fun forEach(action: (Int, Int) -> Unit) { rawMap.forEachEntry { key, value -> action(key, value); return@forEachEntry true } }
-            override fun iterate(action: (Int, Int) -> Unit) { throw UnsupportedOperationException() }
+            override fun forEach(action: IntIntConsumer) { rawMap.forEachEntry { key, value -> action.accept(key, value); return@forEachEntry true } }
+            override fun iterate(action: IntIntConsumer) { throw UnsupportedOperationException() }
             override fun get(key: Int): Int = rawMap.get(key)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -142,8 +142,8 @@ interface BenchmarkableIntMap<T> {
 
             override fun newInstance(): BenchmarkableIntMap<HashIntIntMap> = KolobokeMap()
             override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity.toLong()) }
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEach(IntIntConsumer { key, value -> action(key, value) } )
-            override fun iterate(action: (Int, Int) -> Unit) { for ((key, value) in rawMap) action(key, value) }
+            override fun forEach(action: IntIntConsumer) = rawMap.forEach(IntIntConsumer { key, value -> action.accept(key, value) } )
+            override fun iterate(action: IntIntConsumer) { for ((key, value) in rawMap) action.accept(key, value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -158,8 +158,8 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size()
 
             override fun newInstance(): BenchmarkableIntMap<IntIntHashMap> = EclipseMap()
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachKeyValue { key, value -> action(key, value) }
-            override fun iterate(action: (Int, Int) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: IntIntConsumer) = rawMap.forEachKeyValue { key, value -> action.accept(key, value) }
+            override fun iterate(action: IntIntConsumer) = throw UnsupportedOperationException()
             override fun get(key: Int): Int = rawMap.getIfAbsent(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -175,8 +175,8 @@ interface BenchmarkableIntMap<T> {
 
             override fun newInstance(): BenchmarkableIntMap<com.carrotsearch.hppc.IntIntHashMap> = HPPCMap()
             override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity) }
-            override fun forEach(action: (Int, Int) -> Unit) { rawMap.forEach (IntIntProcedure { key, value -> action(key, value) }) }
-            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun forEach(action: IntIntConsumer) { rawMap.forEach (IntIntProcedure { key, value -> action.accept(key, value) }) }
+            override fun iterate(action: IntIntConsumer) { for (entry in rawMap) action.accept(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -191,8 +191,8 @@ interface BenchmarkableIntMap<T> {
             override val size: Int get() = rawMap.size
 
             override fun newInstance(): BenchmarkableIntMap<org.agrona.collections.Int2IntHashMap> = AgronaMap()
-            override fun forEach(action: (Int, Int) -> Unit) = rawMap.forEachInt { key, value -> action(key, value) }
-            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun forEach(action: IntIntConsumer) = rawMap.forEachInt { key, value -> action.accept(key, value) }
+            override fun iterate(action: IntIntConsumer) { for (entry in rawMap) action.accept(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.getOrDefault(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key) }
@@ -208,7 +208,7 @@ interface BenchmarkableIntMap<T> {
 
             override fun newInstance(): BenchmarkableIntMap<com.badlogic.gdx.utils.IntIntMap> = LibGdxMap()
             override fun ensureCapacity(capacity: Int) { rawMap.ensureCapacity(capacity - rawMap.size) }
-            override fun iterate(action: (Int, Int) -> Unit) { for (entry in rawMap) action(entry.key, entry.value) }
+            override fun iterate(action: IntIntConsumer) { for (entry in rawMap) action.accept(entry.key, entry.value) }
             override fun get(key: Int): Int = rawMap.get(key, 0)
             override fun put(key: Int, value: Int) { rawMap.put(key, value) }
             override fun remove(key: Int) { rawMap.remove(key, 0) }

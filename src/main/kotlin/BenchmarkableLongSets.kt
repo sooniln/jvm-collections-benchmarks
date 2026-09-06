@@ -7,7 +7,7 @@ import com.koloboke.collect.set.hash.HashLongSet
 import com.koloboke.collect.set.hash.HashLongSets
 import gnu.trove.impl.Constants
 import gnu.trove.set.hash.TLongHashSet
-import io.github.sooniln.fastcollect.longs.LongHashSet
+import io.github.sooniln.fastcollect.*
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import java.util.function.LongConsumer
 
@@ -24,8 +24,8 @@ interface BenchmarkableLongSet<T> {
     }
 
     fun ensureCapacity(capacity: Int) {}
-    fun forEach(action: (Long) -> Unit) = iterate(action)
-    fun iterate(action: (Long) -> Unit)
+    fun forEach(action: LongConsumer) = iterate(action)
+    fun iterate(action: LongConsumer)
     fun contains(key: Long): Boolean
     fun add(key: Long): Boolean
     fun remove(key: Long): Boolean
@@ -57,7 +57,7 @@ interface BenchmarkableLongSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableLongSet<HashSet<Long>> = JreSet()
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long) = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -73,8 +73,8 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<LongHashSet> = FastCollectSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach { key -> action(key) }
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: LongConsumer) = rawSet.foreach { key -> action.accept(key) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long) = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -90,9 +90,9 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<LongOpenHashSet> = FastutilSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach(LongConsumer { key -> action(key) })
+            override fun forEach(action: LongConsumer) = rawSet.forEach(LongConsumer { key -> action.accept(key) })
             @Suppress("DEPRECATION")
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long) = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -107,8 +107,8 @@ interface BenchmarkableLongSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableLongSet<MutableLongSet> = AndroidXSet()
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach { action(it) }
-            override fun iterate(action: (Long) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: LongConsumer) = rawSet.forEach { action.accept(it) }
+            override fun iterate(action: LongConsumer) = throw UnsupportedOperationException()
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long) = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -124,8 +124,8 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<TLongHashSet> = TroveSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity)
-            override fun forEach(action: (Long) -> Unit) { rawSet.forEach { action(it); return@forEach true } }
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: LongConsumer) { rawSet.forEach { action.accept(it); return@forEach true } }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long) = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -141,9 +141,9 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<HashLongSet> = KolobokeSet()
             override fun ensureCapacity(capacity: Int) { rawSet.ensureCapacity(capacity.toLong()) }
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach { key -> action(key) }
+            override fun forEach(action: LongConsumer) = rawSet.forEach { key -> action.accept(key) }
             @Suppress("DEPRECATION")
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.removeLong(key)
@@ -159,8 +159,8 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<org.eclipse.collections.impl.set.mutable.primitive.LongHashSet> = EclipseSet()
             override fun ensureCapacity(capacity: Int) {}
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEach { key -> action(key) }
-            override fun iterate(action: (Long) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: LongConsumer) = rawSet.forEach { key -> action.accept(key) }
+            override fun iterate(action: LongConsumer) = throw UnsupportedOperationException()
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -176,8 +176,8 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<com.carrotsearch.hppc.LongHashSet> = HPPCSet()
             override fun ensureCapacity(capacity: Int) { rawSet.ensureCapacity(capacity) }
-            override fun forEach(action: (Long) -> Unit) { rawSet.forEach(LongProcedure { key -> action(key) }) }
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key.value) }
+            override fun forEach(action: LongConsumer) { rawSet.forEach(LongProcedure { key -> action.accept(key) }) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key.value) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -192,8 +192,8 @@ interface BenchmarkableLongSet<T> {
             override val size: Int get() = rawSet.size
 
             override fun newInstance(): BenchmarkableLongSet<org.agrona.collections.LongHashSet> = AgronaSet()
-            override fun forEach(action: (Long) -> Unit) = rawSet.forEachLong { key -> action(key) }
-            override fun iterate(action: (Long) -> Unit) { for (key in rawSet) action(key) }
+            override fun forEach(action: LongConsumer) = rawSet.forEachLong { key -> action.accept(key) }
+            override fun iterate(action: LongConsumer) { for (key in rawSet) action.accept(key) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)
@@ -209,7 +209,7 @@ interface BenchmarkableLongSet<T> {
 
             override fun newInstance(): BenchmarkableLongSet<com.badlogic.gdx.utils.LongSet> = LibGdxSet()
             override fun ensureCapacity(capacity: Int) = rawSet.ensureCapacity(capacity - rawSet.size)
-            override fun iterate(action: (Long) -> Unit) { val iterator = rawSet.iterator(); while (iterator.hasNext) action(iterator.next()) }
+            override fun iterate(action: LongConsumer) { val iterator = rawSet.iterator(); while (iterator.hasNext) action.accept(iterator.next()) }
             override fun contains(key: Long) = rawSet.contains(key)
             override fun add(key: Long): Boolean = rawSet.add(key)
             override fun remove(key: Long) = rawSet.remove(key)

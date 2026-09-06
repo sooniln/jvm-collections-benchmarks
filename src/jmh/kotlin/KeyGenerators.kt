@@ -1,7 +1,6 @@
 package io.github.sooniln.jvmcollectionsbenchmark
 
-import io.github.sooniln.fastcollect.ints.IntHashSet
-import io.github.sooniln.fastcollect.longs.LongHashSet
+import io.github.sooniln.fastcollect.*
 import kotlin.random.Random
 
 object KeyGenerators{

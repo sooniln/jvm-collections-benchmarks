@@ -2,7 +2,7 @@ package io.github.sooniln.jvmcollectionsbenchmark
 
 import androidx.collection.MutableIntList
 import gnu.trove.list.array.TIntArrayList
-import io.github.sooniln.fastcollect.ints.IntArrayList
+import io.github.sooniln.fastcollect.*
 import java.util.function.IntConsumer
 
 interface BenchmarkableIntList<T> {
@@ -18,8 +18,8 @@ interface BenchmarkableIntList<T> {
     }
 
     fun ensureCapacity(capacity: Int)
-    fun forEach(action: (Int) -> Unit) = iterate(action)
-    fun iterate(action: (Int) -> Unit)
+    fun forEach(action: IntConsumer) = iterate(action)
+    fun iterate(action: IntConsumer)
     fun indexOf(key: Int): Int
     fun add(key: Int): Boolean
     fun removeAt(index: Int): Int
@@ -51,7 +51,7 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<ArrayList<Int>> = JreList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun iterate(action: (Int) -> Unit) { for (key in rawList) action(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawList) action.accept(key) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -67,7 +67,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<IntArrayList> = FastCollectList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun iterate(action: (Int) -> Unit) { for (key in rawList) action(key) }
+            override fun forEach(action: IntConsumer) { rawList.foreach { action.accept(it) } }
+            override fun iterate(action: IntConsumer) { for (key in rawList) action.accept(key) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -83,9 +84,9 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<it.unimi.dsi.fastutil.ints.IntArrayList> = FastutilList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawList.forEach(IntConsumer { key -> action(key) })
+            override fun forEach(action: IntConsumer) = rawList.forEach(IntConsumer { key -> action.accept(key) })
             @Suppress("DEPRECATION")
-            override fun iterate(action: (Int) -> Unit) { for (key in rawList) action(key) }
+            override fun iterate(action: IntConsumer) { for (key in rawList) action.accept(key) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeInt(index)
@@ -101,8 +102,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<MutableIntList> = AndroidXList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawList.forEach { action(it) }
-            override fun iterate(action: (Int) -> Unit) = throw UnsupportedOperationException()
+            override fun forEach(action: IntConsumer) = rawList.forEach { action.accept(it) }
+            override fun iterate(action: IntConsumer) = throw UnsupportedOperationException()
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -118,8 +119,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<TIntArrayList> = TroveList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) { rawList.forEach { action(it); return@forEach true } }
-            override fun iterate(action: (Int) -> Unit) { for (key in rawList) action(key) }
+            override fun forEach(action: IntConsumer) { rawList.forEach { action.accept(it); return@forEach true } }
+            override fun iterate(action: IntConsumer) { for (key in rawList) action.accept(key) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -135,8 +136,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<org.eclipse.collections.impl.list.mutable.primitive.IntArrayList> = EclipseList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawList.forEach { key -> action(key) }
-            override fun iterate(action: (Int) -> Unit) { throw UnsupportedOperationException() }
+            override fun forEach(action: IntConsumer) = rawList.forEach { key -> action.accept(key) }
+            override fun iterate(action: IntConsumer) { throw UnsupportedOperationException() }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAtIndex(index)
@@ -152,8 +153,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<com.carrotsearch.hppc.IntArrayList> = HPPCList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawList.forEach { key -> action(key.value) }
-            override fun iterate(action: (Int) -> Unit) { for (element in rawList) action(element.value) }
+            override fun forEach(action: IntConsumer) = rawList.forEach { key -> action.accept(key.value) }
+            override fun iterate(action: IntConsumer) { for (element in rawList) action.accept(element.value) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int): Boolean { rawList.add(key); return true }
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -169,8 +170,8 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<org.agrona.collections.IntArrayList> = AgronaList()
             override fun ensureCapacity(capacity: Int) = rawList.ensureCapacity(capacity)
-            override fun forEach(action: (Int) -> Unit) = rawList.forEach { key -> action(key) }
-            override fun iterate(action: (Int) -> Unit) { for (element in rawList) action(element) }
+            override fun forEach(action: IntConsumer) = rawList.forEach { key -> action.accept(key) }
+            override fun iterate(action: IntConsumer) { for (element in rawList) action.accept(element) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int) = rawList.add(key)
             override fun removeAt(index: Int) = rawList.removeAt(index)
@@ -186,7 +187,7 @@ interface BenchmarkableIntList<T> {
 
             override fun newInstance(): BenchmarkableIntList<com.badlogic.gdx.utils.IntArray> = LibGdxList()
             override fun ensureCapacity(capacity: Int) { rawList.ensureCapacity(capacity - rawList.size) }
-            override fun iterate(action: (Int) -> Unit) { for (i in 0 until rawList.size) action(rawList[i]) }
+            override fun iterate(action: IntConsumer) { for (i in 0 until rawList.size) action.accept(rawList[i]) }
             override fun indexOf(key: Int) = rawList.indexOf(key)
             override fun add(key: Int): Boolean { rawList.add(key); return true }
             override fun removeAt(index: Int) = rawList.removeIndex(index)
